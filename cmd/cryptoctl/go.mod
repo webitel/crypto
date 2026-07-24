@@ -2,22 +2,12 @@ module github.com/webitel/crypto/cmd/cryptoctl
 
 go 1.25.0
 
-// until there is no git remote ..
-replace (
-	github.com/webitel/crypto/encoding/jsonc => ../../encoding/jsonc
-	github.com/webitel/crypto/cryptobox => ../../cryptobox
-	github.com/webitel/crypto/cryptostore => ../../cryptostore
-	github.com/webitel/crypto/cryptostore/postgres => ../../cryptostore/postgres
-	github.com/webitel/crypto/cryptostore/blobstore => ../../cryptostore/blobstore
-  github.com/webitel/crypto/cryptostore/blobstore/gocloud => ../../cryptostore/blobstore/gocloud
-)
-
 require (
-	github.com/webitel/crypto/cryptobox v0.0.0
-	github.com/webitel/crypto/cryptostore v0.0.0
-	github.com/webitel/crypto/cryptostore/blobstore v0.0.0
-	github.com/webitel/crypto/cryptostore/postgres v0.0.0
-	github.com/webitel/crypto/encoding/jsonc v0.0.0
+	github.com/webitel/crypto/cryptobox v0.1.0
+	github.com/webitel/crypto/cryptostore v0.1.0
+	github.com/webitel/crypto/cryptostore/blobstore v0.1.0
+	github.com/webitel/crypto/cryptostore/postgres v0.1.0
+	github.com/webitel/crypto/encoding/jsonc v0.1.0
 )
 
 require (
@@ -65,6 +55,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.19.0 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
+	github.com/webitel/crypto/env v0.1.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
@@ -75,7 +66,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	gocloud.dev v0.46.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
@@ -97,11 +88,11 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/webitel/crypto/cryptostore/blobstore/gocloud v0.0.0
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	github.com/webitel/crypto/cryptostore/blobstore/gocloud v0.1.0
+	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	modernc.org/libc v1.72.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
