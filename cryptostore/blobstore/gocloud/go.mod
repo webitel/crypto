@@ -2,18 +2,10 @@ module github.com/webitel/crypto/cryptostore/blobstore/gocloud
 
 go 1.25.0
 
-// until there is no git remote ..
-replace (
-	github.com/webitel/crypto/cryptobox => ../../../cryptobox
-	github.com/webitel/crypto/cryptostore => ../../
-	github.com/webitel/crypto/cryptostore/blobstore => ../
-	github.com/webitel/crypto/encoding/jsonc => ../../../encoding/jsonc
-)
-
 require (
-	github.com/webitel/crypto/cryptobox v0.0.0
-	github.com/webitel/crypto/cryptostore v0.0.0
-	github.com/webitel/crypto/cryptostore/blobstore v0.0.0
+	github.com/webitel/crypto/cryptobox v0.1.0
+	github.com/webitel/crypto/cryptostore v0.1.0
+	github.com/webitel/crypto/cryptostore/blobstore v0.1.0
 	gocloud.dev v0.46.0
 )
 
@@ -67,6 +59,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
+	github.com/webitel/crypto/env v0.1.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
@@ -76,12 +69,12 @@ require (
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.272.0 // indirect
