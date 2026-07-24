@@ -1,0 +1,29 @@
+module github.com/webitel/crypto/cryptostore/postgres
+
+go 1.25.0
+
+// until there is no git remote ..
+replace (
+	github.com/webitel/crypto/cryptobox => ../../cryptobox
+	github.com/webitel/crypto/cryptostore => ../
+	github.com/webitel/crypto/encoding/jsonc => ../../encoding/jsonc
+)
+
+require (
+	github.com/jackc/pgx/v5 v5.10.0
+	github.com/webitel/crypto/cryptobox v0.0.0
+	github.com/webitel/crypto/cryptostore v0.0.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/webitel/crypto/encoding/jsonc v0.0.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
+)

@@ -1,0 +1,12 @@
+go 1.25.0
+
+use (
+	./env
+  ./encoding/jsonc
+  ./cryptobox
+	./cryptostore
+	./cryptostore/blobstore
+	./cryptostore/blobstore/gocloud
+	./cryptostore/postgres
+	./cmd/cryptoctl
+)
