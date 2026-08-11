@@ -38,11 +38,14 @@ func open(ctx context.Context, opts cryptostore.StoreOptions) (cryptostore.Store
 	if name == "" {
 		name = opts.Name
 	}
-	// Fail fast (before acquiring a pool): a schema with searchable fields needs a
-	// blind-index keyring.
-	if sch.HasSearchable() && !opts.Codec.CanIndex() {
-		return nil, fmt.Errorf("postgres: %s: schema has searchable fields but no search keyring "+
-			"(set WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE})", name)
+	codec, err := schema.NewCodec(schema.WithBase(opts.Codec), schema.WithBaseline(sch))
+	if err != nil {
+		return nil, err
+	}
+	// Fail fast (before acquiring a pool): this record store fills the search-index
+	// column, so a schema with searchable fields needs a blind-index keyring.
+	if err := codec.RequireIndex(); err != nil {
+		return nil, fmt.Errorf("postgres: %s: %w", name, err)
 	}
 	// Stores with the same DSN share one pool (see pool.go); InstallFunctions runs
 	// per store since the function schema (Config.Schema) may differ, and it is idempotent.
@@ -51,11 +54,6 @@ func open(ctx context.Context, opts cryptostore.StoreOptions) (cryptostore.Store
 		return nil, err
 	}
 	if err := InstallFunctions(ctx, pool, cfg.Schema); err != nil {
-		releasePool(opts.DSN)
-		return nil, err
-	}
-	codec, err := schema.NewCodec(schema.WithBase(opts.Codec), schema.WithBaseline(sch))
-	if err != nil {
 		releasePool(opts.DSN)
 		return nil, err
 	}

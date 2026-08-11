@@ -38,8 +38,8 @@ func TestOpenSearchableRequiresIndex(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error: searchable schema without a search keyring")
 	}
-	if !strings.Contains(err.Error(), "search keyring") {
-		t.Fatalf("error = %v, want mention of search keyring", err)
+	if !strings.Contains(err.Error(), "searchable fields require a keyring") {
+		t.Fatalf("error = %v, want mention of the missing search keyring", err)
 	}
 }
 
