@@ -20,8 +20,9 @@ var schemes = []string{"s3", "gs", "file", "mem"}
 // Go CDK bucket URL (s3://…, gs://…, file://…, mem://…); the sqlite catalog path
 // lives in the config block.
 func init() {
+	// Schemaless: a cloud blob store encrypts whole objects and ignores the field schema.
 	for _, scheme := range schemes {
-		cryptostore.Register(scheme, open)
+		cryptostore.RegisterSchemaless(scheme, open)
 	}
 }
 

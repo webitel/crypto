@@ -131,10 +131,10 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/webitel/crypto/cryptobox v0.1.0 h1:wVCoRTBJfDaq5/evvi52oJM/YBFs1pK/QTrA7EFPaAk=
 github.com/webitel/crypto/cryptobox v0.1.0/go.mod h1:td/OI3xSEbMl+gW3b84QESdR20uD3KHHsma59ke7mmQ=
-github.com/webitel/crypto/cryptostore v0.1.0 h1:Yci/rJKiGESiZVS5dgkzauhxICYgCrEk+gU0DOu2JO8=
-github.com/webitel/crypto/cryptostore v0.1.0/go.mod h1:0YFsRFflMIwM67xHQ4mvC3XwStdsNCScWFsC7KxCVS8=
-github.com/webitel/crypto/cryptostore/blobstore v0.1.0 h1:HJWkNAzVMDg7eRnelHxe3iDhRU1TLzHUEne/cuTdpDE=
-github.com/webitel/crypto/cryptostore/blobstore v0.1.0/go.mod h1:uBfa2oH8wAQuLnnRbP7rMZ8h1xfCzkjtR4Ru1Uu5J24=
+github.com/webitel/crypto/cryptostore v0.2.0 h1:SpYI61BD8vSTvngBZIhLsq44OeXD3tD0h6iGzswVN/w=
+github.com/webitel/crypto/cryptostore v0.2.0/go.mod h1:0YFsRFflMIwM67xHQ4mvC3XwStdsNCScWFsC7KxCVS8=
+github.com/webitel/crypto/cryptostore/blobstore v0.2.0 h1:/rh0El0UwikMOoo87JzfSM5N6PHSYNKiiT68eppCFzM=
+github.com/webitel/crypto/cryptostore/blobstore v0.2.0/go.mod h1:z5aT918DoYNcBwcQE3aZSGe5WLXXTwB6YSY1l7jmznc=
 github.com/webitel/crypto/env v0.1.0 h1:bIWQgAwPcThnuX6gOQmWUubVTZrnnavukya8dSXZwRc=
 github.com/webitel/crypto/env v0.1.0/go.mod h1:/jyzvmqAY6KGRwiV4oCWaBAeZOW51j1JdgswUnIPxqo=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
