@@ -12,8 +12,10 @@ import (
 // (e.g. _ "github.com/webitel/crypto/cryptostore/blobstore") to let cryptostore.OpenStore
 // build local-directory blob stores from configuration. The DSN is blobfs:<dir>,
 // e.g. blobfs:/var/lib/webitel/crypto — the opaque part is the directory.
+//
+// Schemaless: a blob store encrypts whole objects and ignores the field schema.
 func init() {
-	cryptostore.Register("blobfs", open)
+	cryptostore.RegisterSchemaless("blobfs", open)
 }
 
 func open(_ context.Context, opts cryptostore.StoreOptions) (cryptostore.Store, error) {
