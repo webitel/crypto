@@ -170,7 +170,15 @@ func resolveSchema(sc *StoreConfig, schemaDir string) error {
 	if err != nil {
 		return fmt.Errorf("store %q schema: %w", sc.Name, err)
 	}
-	merged := schema.MergeConfig(schema.Baseline(), overlay)
+	// The compiled-in baseline is a field schema — meaningful only for record-oriented
+	// stores that encode fields and fill the search-index column. A schemaless store
+	// (blob/object storage) ignores the field schema, so merging the baseline into it
+	// only forces a search keyring it never uses; skip it there and honor just the
+	// store's own overlay.
+	merged := overlay
+	if recordOriented(sc.DSN) {
+		merged = schema.MergeConfig(schema.Baseline(), overlay)
+	}
 	if merged == nil {
 		sc.Schema = nil // no schema (and no baseline)
 		return nil
@@ -181,6 +189,16 @@ func resolveSchema(sc *StoreConfig, schemaDir string) error {
 	}
 	sc.Schema = raw
 	return nil
+}
+
+// recordOriented reports whether a store's DSN scheme is record-oriented — i.e. its
+// driver consumes a field schema and fills the search-index column, so the compiled-in
+// baseline field schema applies. It defers entirely to the driver's own registration
+// (cryptostore.Schemaless), so cryptoctl keeps no scheme list of its own; a schemaless
+// (blob/object) driver returns false. Unknown schemes count as record-oriented
+// (fail-closed) — they fail to open later regardless.
+func recordOriented(dsn string) bool {
+	return !cryptostore.Schemaless(cryptostore.Scheme(dsn))
 }
 
 // resolveDir resolves a --store-dir / --schema-dir spec to a path. An absolute spec is

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -108,7 +109,10 @@ func TestLoadStoresSchemaMerge(t *testing.T) {
 }
 
 // TestLoadStoresSchemaEmpty: null, {}, and an absent schema section all yield no schema.
-func TestLoadStoresSchemaEmpty(t *testing.T) {
+// TestLoadStoresSchemaBaseline: with no explicit schema, the compiled-in baseline
+// (registered by the imported plugin's init) is merged into record-oriented stores
+// (postgres) but never into schemaless stores (blobfs) — see resolveSchema/recordOriented.
+func TestLoadStoresSchemaBaseline(t *testing.T) {
 	sd := t.TempDir()
 	write(t, filepath.Join(sd, "a.json"), `{"dsn":"postgres:","name":"a","schema":null}`)
 	write(t, filepath.Join(sd, "b.json"), `{"dsn":"postgres:","name":"b","schema":{}}`)
@@ -118,10 +122,29 @@ func TestLoadStoresSchemaEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadStores: %v", err)
 	}
-	for _, sc := range stores {
-		if len(sc.Schema) != 0 {
-			t.Errorf("store %q: schema = %s, want empty", sc.Name, sc.Schema)
+
+	// want is the marshaled baseline the record-oriented stores should carry ("" if none
+	// is registered, which also makes this test pass in a build without the plugin).
+	want := ""
+	if base := schema.Baseline(); base != nil {
+		raw, err := json.Marshal(base)
+		if err != nil {
+			t.Fatal(err)
 		}
+		want = string(raw)
+	}
+	byName := map[string]string{}
+	for _, sc := range stores {
+		byName[sc.Name] = string(sc.Schema)
+	}
+	if byName["a"] != want {
+		t.Errorf("store %q (postgres): schema = %s, want baseline %s", "a", byName["a"], want)
+	}
+	if byName["b"] != want {
+		t.Errorf("store %q (postgres): schema = %s, want baseline %s", "b", byName["b"], want)
+	}
+	if byName["c"] != "" {
+		t.Errorf("store %q (blobfs): schema = %s, want empty (baseline not merged into schemaless store)", "c", byName["c"])
 	}
 }
 

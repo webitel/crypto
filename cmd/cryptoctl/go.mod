@@ -4,9 +4,10 @@ go 1.25.0
 
 require (
 	github.com/webitel/crypto/cryptobox v0.1.0
-	github.com/webitel/crypto/cryptostore v0.1.0
-	github.com/webitel/crypto/cryptostore/blobstore v0.1.0
-	github.com/webitel/crypto/cryptostore/postgres v0.1.0
+	github.com/webitel/crypto/cryptostore v0.2.0
+	github.com/webitel/crypto/cryptostore/blobstore v0.2.0
+	github.com/webitel/crypto/cryptostore/blobstore/gocloud v0.2.0
+	github.com/webitel/crypto/cryptostore/postgres v0.2.0
 	github.com/webitel/crypto/encoding/jsonc v0.1.0
 )
 
@@ -88,7 +89,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/webitel/crypto/cryptostore/blobstore/gocloud v0.1.0
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
