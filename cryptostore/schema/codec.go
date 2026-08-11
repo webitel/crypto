@@ -60,6 +60,20 @@ func (c *Codec) Schema() *Config { return c.active.Load() }
 // IndexField returns the name of the per-unit search-index json column.
 func (c *Codec) IndexField() string { return c.idxField }
 
+// RequireIndex reports the error when the active schema has searchable fields but
+// the base codec has no blind-index keyring, so the search-index column cannot be
+// filled (EncodeRecords would fail with ErrIndexKey at the first searchable value).
+// It is the reusable fail-fast check for record-oriented stores that write the
+// index column (call it at open time); codecs that only encrypt/decrypt may ignore
+// it — search simply stays disabled. The keyring is whatever the base codec was
+// built with (an explicit one, or the env-default WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}).
+func (c *Codec) RequireIndex() error {
+	if c.Schema().HasSearchable() && !c.base.CanIndex() {
+		return fmt.Errorf("cryptostore/schema: searchable fields require a keyring to construct blind-index tokens")
+	}
+	return nil
+}
+
 // SetBaseline pins an immutable minimum schema merged onto every reload.
 func (c *Codec) SetBaseline(base *Config) {
 	c.baseline = base

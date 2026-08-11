@@ -51,7 +51,7 @@ All encryption/decryption happens **in code** — keyring material never reaches
 | `frame.go` | inline framing: `FrameBinary`/`UnframeBinary` (bytea), `FrameText`/`UnframeText` (json text tag); `Codec.Encrypt`/`Decrypt` (binary self-marking), `EncryptText`/`DecryptText`/`RecryptText` (json) |
 | `bindex.go` | `blindIndex` — HKDF-derived, domain-scoped deterministic search tokens over the index `*cryptobox.Keyring` |
 | `crypto.go` | env-backed process defaults: `Default()` (memoized `*Codec` — cipher via `cryptobox.Default`, search via `SearchKeys`), `SearchKeys()` (blind-index keyring from `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}`), `SystemDir()`, `Environment()` |
-| `registry.go` | `Register`/`Schemes`/`Scheme`/`DriverFunc`/`StoreOptions` + `OpenStore(ctx, opts)` — the DSN-scheme→driver registry and the per-store open primitive |
+| `registry.go` | `Register`/`RegisterSchemaless`/`Schemaless`/`Schemes`/`Scheme`/`DriverFunc`/`StoreOptions` + `OpenStore(ctx, opts)` — the DSN-scheme→driver registry and the per-store open primitive |
 | `store.go` | `Store` interface, `KeyUsage` |
 | `migrate.go` | `Migration` (`NewMigration`, `Usage`, `Run`, `CanRetire`), `MigrateOptions`/`MigrateResult`/`Progress` |
 
@@ -132,7 +132,11 @@ for a single service. Core exposes only the primitives: `Codec`, `OpenStore`, `M
 selects the registered `DriverFunc`; the **opaque** remainder is the driver's to parse (core never
 validates it). A store implementation calls `cryptostore.Register(scheme, driverFunc)` in its `init()`
 (import for side effect, e.g. `_ ".../cryptostore/postgres"`); a driver may register several
-schemes (gocloud → `s3`/`gs`/`file`/`mem`). `cryptostore.OpenStore(ctx, StoreOptions)` dispatches by the
+schemes (gocloud → `s3`/`gs`/`file`/`mem`). A driver that encrypts whole objects and does
+NOT consume a field schema (blob/object storage) registers via `RegisterSchemaless` instead;
+`cryptostore.Schemaless(scheme)` reports the declared kind (false for record-oriented and for
+unknown schemes — fail-closed), so an agent can decide whether to apply a field-schema baseline
+without hardcoding a scheme list (see cryptoctl `resolveSchema`/`recordOriented`). `cryptostore.OpenStore(ctx, StoreOptions)` dispatches by the
 DSN scheme to the `DriverFunc(ctx, StoreOptions)`. `StoreOptions` carries the `*Codec`, the full `DSN`, the raw
 config block (extras not in the DSN — postgres `schema`, blobstore `catalog`), the raw schema, a verbose flag, and
 `BaseDir` (the directory of the config file that declared the store). A driver anchors a relative

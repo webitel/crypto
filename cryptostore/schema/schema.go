@@ -38,11 +38,11 @@ func DefaultConfig() (*Config, error) {
 		return LoadConfigFile(filename)
 	}
 	if inline != "" {
-		var inc IncludeConfig // inline schema.Config, or an {dir, files} include directive
-		if err := json.Unmarshal([]byte(inline), &inc); err != nil {
+		var include IncludeConfig // inline schema.Config, or an {dir, files} include directive
+		if err := json.Unmarshal([]byte(inline), &include); err != nil {
 			return nil, fmt.Errorf("cryptostore/schema: WBTL_CRYPTO_SCHEMA: %w", err)
 		}
-		return inc.Config(cryptostore.SystemDir())
+		return include.Config(cryptostore.SystemDir())
 	}
 	return nil, nil
 }
@@ -165,14 +165,14 @@ func DefaultOptions() CodecOption {
 // NewCodec never touches the environment on its own: env resolution is opt-in via
 // the Default* options.
 func NewCodec(opts ...CodecOption) (*Codec, error) {
-	var o codecOptions
+	var setup codecOptions
 	for _, opt := range opts {
-		if err := opt(&o); err != nil {
+		if err := opt(&setup); err != nil {
 			return nil, err
 		}
 	}
-	if o.base == nil {
+	if setup.base == nil {
 		return nil, fmt.Errorf("cryptostore/schema: NewCodec: no base codec (use WithBase or DefaultOptions)")
 	}
-	return buildCodec(o.base, o.baseline, o.overlay), nil
+	return buildCodec(setup.base, setup.baseline, setup.overlay), nil
 }

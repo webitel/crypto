@@ -1,6 +1,29 @@
 package cryptostore
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
+
+// TestSchemaless confirms the driver-declared record/schemaless capability: Register
+// marks a scheme record-oriented (Schemaless == false), RegisterSchemaless marks it
+// schemaless (true), and an unregistered scheme reports false — the fail-closed default
+// an agent relies on to still apply a field-schema baseline to schemes it doesn't know.
+func TestSchemaless(t *testing.T) {
+	nop := func(context.Context, StoreOptions) (Store, error) { return nil, nil }
+	Register("test-record", nop)
+	RegisterSchemaless("test-blob", nop)
+
+	if Schemaless("test-record") {
+		t.Error("Register should mark the scheme record-oriented (Schemaless == false)")
+	}
+	if !Schemaless("test-blob") {
+		t.Error("RegisterSchemaless should mark the scheme schemaless (Schemaless == true)")
+	}
+	if Schemaless("test-unregistered") {
+		t.Error("unknown scheme must report Schemaless == false (fail-closed)")
+	}
+}
 
 // Test_getScheme exercises the DSN scheme splitter (adapted from net/url.getScheme):
 // a scheme must start with a letter and contain only [a-zA-Z0-9+.-]; the ":" ends it

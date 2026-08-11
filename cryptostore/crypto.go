@@ -28,7 +28,7 @@ func Default() (*Codec, error) {
 	mod.codec.init.Do(func() {
 		cipher, err := cryptobox.Default()
 		if err != nil {
-			mod.codec.err = fmt.Errorf("cryptostore: encryption: %w", err)
+			mod.codec.err = fmt.Errorf("cryptostore: cipher keyring: %w", err)
 			return
 		}
 		searchKeys, err := SearchKeys()

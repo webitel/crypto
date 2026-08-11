@@ -52,8 +52,9 @@ func (x *StoreOptions) Resolve(path string) string {
 type DriverFunc func(ctx context.Context, opts StoreOptions) (Store, error)
 
 var (
-	regMu    sync.RWMutex
-	registry = map[string]DriverFunc{}
+	regMu      sync.RWMutex
+	registry   = map[string]DriverFunc{}
+	schemaless = map[string]bool{} // schemes whose driver ignores the field schema
 )
 
 // Register makes a DriverFunc available under a DSN scheme (the part before the
@@ -61,7 +62,20 @@ var (
 // init(), so importing the impl package (e.g. _ "github.com/webitel/crypto/cryptostore/postgres")
 // enables that scheme; a driver may register several schemes. It panics on empty
 // or duplicate registration.
-func Register(scheme string, driver DriverFunc) {
+//
+// The driver is assumed record-oriented — it consumes a field schema (schema.Config)
+// and fills the search-index column. A driver that encrypts whole objects and ignores
+// the field schema (blob/object storage) registers via RegisterSchemaless instead.
+func Register(scheme string, driver DriverFunc) { register(scheme, driver, false) }
+
+// RegisterSchemaless is Register for a driver that encrypts whole objects and does
+// NOT consume a field schema (blob/object storage). It marks the scheme schemaless
+// (reported by Schemaless), so an agent can skip merging a field-schema baseline into
+// such stores. Everything else — the init()-time call, multiple schemes per driver,
+// the empty/duplicate panics — matches Register.
+func RegisterSchemaless(scheme string, driver DriverFunc) { register(scheme, driver, true) }
+
+func register(scheme string, driver DriverFunc, noSchema bool) {
 	if scheme == "" || driver == nil {
 		panic("cryptostore: Register requires a non-empty scheme and driver")
 	}
@@ -71,6 +85,20 @@ func Register(scheme string, driver DriverFunc) {
 		panic("cryptostore: duplicate store scheme " + scheme)
 	}
 	registry[scheme] = driver
+	if noSchema {
+		schemaless[scheme] = true
+	}
+}
+
+// Schemaless reports whether scheme's driver was registered via RegisterSchemaless —
+// i.e. it ignores the field schema (blob/object storage). It is false for a normal
+// (record-oriented) driver AND for an unknown scheme, so an agent that gates a field
+// schema on !Schemaless is fail-closed: a scheme it does not recognize is still treated
+// as record-oriented (e.g. it still receives a pinned baseline).
+func Schemaless(scheme string) bool {
+	regMu.RLock()
+	defer regMu.RUnlock()
+	return schemaless[scheme]
 }
 
 // Schemes returns the registered DSN schemes, sorted — useful for diagnostics.
