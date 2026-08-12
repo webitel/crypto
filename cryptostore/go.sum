@@ -1,5 +1,5 @@
-github.com/webitel/crypto/cryptobox v0.1.0 h1:wVCoRTBJfDaq5/evvi52oJM/YBFs1pK/QTrA7EFPaAk=
-github.com/webitel/crypto/cryptobox v0.1.0/go.mod h1:td/OI3xSEbMl+gW3b84QESdR20uD3KHHsma59ke7mmQ=
+github.com/webitel/crypto/cryptobox v0.2.0 h1:6KUza8aa9eBreI3aUFLJjkssvi8LYANcemM0vSBuNVE=
+github.com/webitel/crypto/cryptobox v0.2.0/go.mod h1:td/OI3xSEbMl+gW3b84QESdR20uD3KHHsma59ke7mmQ=
 github.com/webitel/crypto/encoding/jsonc v0.1.0 h1:Utaem86xUXv6y3UeHd0thFCxj+PuG4Wku4vE1SHenzE=
 github.com/webitel/crypto/encoding/jsonc v0.1.0/go.mod h1:i1PWHoKplqTsQpN3LK+qzyeGKmwd0HIVtHwaUWE2OZc=
 github.com/webitel/crypto/env v0.1.0 h1:bIWQgAwPcThnuX6gOQmWUubVTZrnnavukya8dSXZwRc=

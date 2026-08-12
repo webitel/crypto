@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/webitel/crypto/cryptobox v0.1.0
+	github.com/webitel/crypto/cryptobox v0.2.0
 	github.com/webitel/crypto/cryptostore v0.2.0
 )
 

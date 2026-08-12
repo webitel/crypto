@@ -3,7 +3,7 @@ module github.com/webitel/crypto/cryptostore/blobstore
 go 1.25.0
 
 require (
-	github.com/webitel/crypto/cryptobox v0.1.0
+	github.com/webitel/crypto/cryptobox v0.2.0
 	github.com/webitel/crypto/cryptostore v0.2.0
 	golang.org/x/crypto v0.54.0
 	modernc.org/sqlite v1.52.0
