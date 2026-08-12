@@ -33,8 +33,8 @@ func TestDefaultCipherFile(t *testing.T) {
 	if got := defaultCipherFile("some-inline-keyring", ""); got != "" {
 		t.Errorf("inline keyring set: fallback = %q, want empty", got)
 	}
-	if got := defaultCipherFile("", "/some/file"); got != "" {
-		t.Errorf("keys file set: fallback = %q, want empty", got)
+	if got := defaultCipherFile("", "/some/file"); got != "/some/file" {
+		t.Errorf("keys file set: got %q, want the given file (pass-through)", got)
 	}
 
 	t.Setenv("WBTL_CRYPTO_DIR", t.TempDir()) // dir without a .cipher

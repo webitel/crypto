@@ -42,6 +42,7 @@ plain, err = box.Decrypt(ctx, blob)
 |---|---|
 | `WBTL_CRYPTO_CIPHER_KEYRING` | Inline keyring-рядок (один або кілька ключів) |
 | `WBTL_CRYPTO_CIPHER_KEYFILE` | Шлях до файлу з keyring-рядком; підтримує hot-reload |
+| `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` | Період опитування keyfile для авто hot-reload (`time.Duration`, напр. `5s`); `0`/не задано — вимкнено. Див. нижче |
 | `WBTL_CRYPTO_DIR` | Системна тека (дефолт `/var/lib/webitel/crypto`); фолбек для `.cipher` |
 
 Можна вказувати лише одну з `*_KEYRING`/`*_KEYFILE`. `WBTL_CRYPTO_CIPHER_KEYFILE` має пріоритет якщо задані обидві.
@@ -53,8 +54,9 @@ Namespace — `WBTL_` → `CRYPTO` → `CIPHER` (див. `github.com/webitel/cry
 (дефолт `/var/lib/webitel/crypto/.cipher`). Тобто devops кладе keyring туди — і сервіс на
 cryptobox працює **без жодних змінних середовища**. Env має пріоритет; файл читається лише
 коли існує (інакше поведінка як була). Резолв відбувається **раз** і мемоізується (успіх або
-помилка) — для hot-reload файлу-ключа збери власний `NewKeyring`+`WatchFile` і встанови його
-через `SetDefault`. На Debian/systemd тека пасує `StateDirectory=webitel/crypto`.
+помилка). Для авто hot-reload дефолтного keyfile задай `WBTL_CRYPTO_CIPHER_KEYFILE_POLL`
+(див. нижче); для повного контролю над життєвим циклом — збери власний `NewKeyring`+`WatchFile`
+і встанови його через `SetDefault`. На Debian/systemd тека пасує `StateDirectory=webitel/crypto`.
 
 ### Права доступу до файлів ключів
 
@@ -221,7 +223,7 @@ err := ring.Retire(1) // помилка, якщо спробувати відк�
 
 ```bash
 WBTL_CRYPTO_CIPHER_KEYRING=-,phrase-jul-2025!
-#                ^ KID=1 відкликано
+#                          ^ KID=1 відкликано
 ```
 
 Якщо залишились blob-и з KID=1 — `Decrypt()` поверне `ErrKeyRetired`. Це сигнал, що міграція не завершена.
@@ -380,10 +382,28 @@ err := cryptobox.Init()                     // форсувати розбір e
 
 Package-level `Encrypt`/`Decrypt`/`Recrypt` ідуть через `Default()`.
 
-**Hot-reload дефолтного cipher** (опційно — сам собою watch не вмикається). `Default()`
-будує `Box` над тим самим `*Keyring`, що повертає `DefaultKeys()`, тож достатньо watch-нути
-його: перезавантаження мутує ring і скидає AEAD-кеш `Box`. Для inline-ключа (без `_FILE`) —
-no-op:
+**Hot-reload дефолтного cipher.** Ротація ключів на льоту, без перезапуску сервісу.
+`Default()` будує `Box` над тим самим `*Keyring`, що повертає `DefaultKeys()`; перезавантаження
+файлу мутує ring і скидає AEAD-кеш `Box`, тож нові шифрування йдуть під новим primary, а старі
+`kid` далі дешифруються.
+
+**Варіант 1 — через env (нуль коду).** Задай `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` — `DefaultKeys`
+сам стартує фоновий watcher на весь час життя процесу:
+
+```bash
+export WBTL_CRYPTO_CIPHER_KEYFILE=/run/secrets/keyring.conf
+export WBTL_CRYPTO_CIPHER_KEYFILE_POLL=5s   # 0/не задано — вимкнено
+```
+
+- Значення підтягується до мінімуму `MinKeyFilePoll` (1s), щоб не «довбати» ФС.
+- **Некоректне** значення (напр. `-1s`, `5` без одиниці) — помилка всього дефолтного keyring
+  (гучно: щоб друкарська помилка не лишила ротацію без нагляду мовчки).
+- Для **inline**-ключа (`_KEYRING`, без `_FILE`) — ігнорується з попередженням у лог.
+- Результат кожного reload іде через хук `cryptobox.DefaultKeysOnUpdate` (дефолт — `slog`:
+  успіх → `Info`, помилка → `Error`). Заміни його (метрики/алерт) або став `nil` для тиші —
+  **до** першого виклику `DefaultKeys`/`Default`.
+
+**Варіант 2 — явно, зі своїм `ctx`** (контроль над зупинкою watcher'а). Для inline-ключа — no-op:
 
 ```go
 ring, _ := cryptobox.DefaultKeys()
@@ -394,8 +414,12 @@ go func() {
 }()
 ```
 
+> ⚠️ Ротація = **додати** ключ з більшим KID у файл (старі лишати для дешифрування). Видаляти
+> ключ, під яким ще є дані, не можна — вони стануть недешифровними.
+
 > Другий незалежний keyring (напр. blind-index `WBTL_CRYPTO_SEARCH_KEYRING` у cryptostore)
 > будується окремим `NewKeyring(...)` — cryptobox `Default` знає лише про cipher-namespace.
+> Авто-hot-reload search-ключа поки не підключено (немає підтримки живої ротації blind-index).
 
 ### Insecure (dev/test)
 
@@ -461,6 +485,8 @@ spec:
       env:
         - name: WBTL_CRYPTO_CIPHER_KEYFILE
           value: /run/secrets/cryptobox/keyring.conf
+        - name: WBTL_CRYPTO_CIPHER_KEYFILE_POLL   # авто hot-reload при оновленні Secret
+          value: "5s"
       volumeMounts:
         - name: cryptobox-secret
           mountPath: /run/secrets/cryptobox
@@ -472,13 +498,13 @@ spec:
 ```
 
 ```go
-// Найпростіший варіант — Default підхоплює WBTL_CRYPTO_CIPHER_KEYFILE автоматично.
-ctx, cancel := context.WithCancel(context.Background())
-defer cancel()
-
-blob, err := cryptobox.Encrypt(ctx, []byte("secret"))
-// При оновленні Secret файл зміниться → ring.Load() → Box cache скинеться → новий AEAD
+// Нуль коду: з WBTL_CRYPTO_CIPHER_KEYFILE_POLL=5s (вище) Default сам поллить keyfile.
+blob, err := cryptobox.Encrypt(context.Background(), []byte("secret"))
+// При оновленні Secret файл зміниться → watcher викличе ring.Load() → Box cache скинеться → новий AEAD
 ```
+
+> Без `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` watch сам не вмикається — тоді стартуй його явно
+> через `ring.WatchFile(ctx)` (див. секцію «Default / DefaultKeys»).
 
 > Vault Agent і AWS Secrets Manager Agent теж пишуть секрети у файли — схема та сама.
 

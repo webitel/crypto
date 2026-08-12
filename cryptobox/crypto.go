@@ -3,11 +3,14 @@ package cryptobox
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/webitel/crypto/env"
 )
@@ -107,20 +110,116 @@ func SetDefault(use Cipher) {
 // memoized for the life of the process — a caller that needs keys needs them now, so
 // a resolution failure is returned to every caller immediately rather than retried
 // (which under load would mean many callers hammering an unavailable/broken source).
+//
+// WBTL_CRYPTO_CIPHER_KEYFILE_POLL (a time.Duration, e.g. "5s") enables hot-reload: when
+// positive, a background watcher polls the file-backed keyring at that interval and swaps
+// in rotated keys WITHOUT a process restart (rotation = add a higher-KID key to the file;
+// old keys stay for decrypt — do not delete keys still protecting data). It is clamped up
+// to MinKeyFilePoll; 0/unset (the default) disables watching; a malformed value fails the
+// whole default keyring (loud, so a typo never silently leaves rotation un-watched). It is
+// ignored for an inline keyring (nothing to watch).
 func DefaultKeys() (*Keyring, error) {
 	mod.keys.init.Do(func() {
-		var keyring, filename string
-		Environment("CIPHER").Apply(
-			env.String("KEYRING", func(v string, _ bool) { keyring = v }),
-			env.String("KEYFILE", func(v string, _ bool) { filename = v }),
-			// env.String("ALGORITHM", func(string, bool) {}), // DefaultAlog == ChaCha20Poly1305
+		var (
+			err   error
+			setup KeyringOptions
 		)
-		if f := defaultCipherFile(keyring, filename); f != "" {
-			filename = f
+		Environment("CIPHER").Apply(
+			env.String("KEYRING", func(v string, _ bool) { setup.Keyring = v }),
+			env.String("KEYFILE", func(v string, _ bool) { setup.Filename = v }),
+			env.String("KEYFILE_POLL", func(v string, _ bool) {
+				var re error
+				setup.FilePoll, re = parseKeyFilePoll(v)
+				err = errors.Join(err, re)
+			}),
+		)
+		// bad arguments ?
+		if err != nil {
+			mod.keys.err = err
+			return // err
 		}
-		mod.keys.ring, mod.keys.err = NewKeyring(KeyringOptions{Keyring: keyring, Filename: filename})
+		// try system keyfile if none specified
+		setup.Filename = defaultCipherFile(
+			setup.Keyring, setup.Filename,
+		)
+		// try to load cipher key(s) material ..
+		mod.keys.ring, mod.keys.err = NewKeyring(setup)
+		if mod.keys.err != nil {
+			return // err
+		}
+		// Opt-in hot-reload. The watcher runs for the life of the process (the default
+		// keyring is a process-wide singleton), so context.Background is deliberate — there
+		// is nothing to cancel. For explicit lifecycle control, build a NewKeyring +
+		// WatchFile(ctx) and install it via SetDefault instead.
+		if setup.FilePoll > 0 {
+			if setup.Filename == "" {
+				slog.Warn("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL set but the cipher keyring is inline; ignoring (nothing to watch)")
+			} else {
+				go drainKeyFileWatch(mod.keys.ring.WatchFile(context.Background()))
+			}
+		}
 	})
 	return mod.keys.ring, mod.keys.err
+}
+
+// MinKeyFilePoll is the smallest accepted WBTL_CRYPTO_CIPHER_KEYFILE_POLL interval: a
+// positive value below it is raised to this floor so a misconfiguration cannot hammer the
+// filesystem. 0 (the default) disables watching entirely.
+const MinKeyFilePoll = time.Second
+
+// parseKeyFilePoll interprets the WBTL_CRYPTO_CIPHER_KEYFILE_POLL value: "" or "0" → 0
+// (no watch); a positive duration is clamped up to MinKeyFilePoll; a negative or malformed
+// value is an error (fail loud rather than silently skip the watch).
+func parseKeyFilePoll(text string) (time.Duration, error) {
+	if text == "" {
+		return 0, nil // unset → no watch
+	}
+	every, err := time.ParseDuration(text)
+	if err != nil {
+		return 0, fmt.Errorf("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL %q: %w", text, err)
+	}
+	if every < 0 {
+		return 0, fmt.Errorf("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL must not be negative: %q", text)
+	}
+	if every == 0 {
+		return 0, nil // explicit 0 → no watch
+	}
+	every = max(MinKeyFilePoll, every)
+	return every, nil
+}
+
+// DefaultKeysOnUpdate is the hook invoked for every reload outcome of the default
+// keyring's file watcher (started by DefaultKeys when WBTL_CRYPTO_CIPHER_KEYFILE_POLL is
+// set): err == nil means a successful reload (rotated keys are now in effect), a non-nil
+// err means the reload failed and the previous keys stay in effect (see KeyFile.Load).
+// The default implementation logs the outcome via slog.
+//
+// Replace it to route reloads elsewhere (metrics, a custom logger, an alert); set it to
+// nil to silence them. It is read once when the watcher starts, so assign it BEFORE the
+// first DefaultKeys/Default call (e.g. in an init or at startup) — a later change does not
+// affect an already-running watcher. The hook runs on the watcher goroutine and must not
+// block; keep it quick (offload slow work to another goroutine).
+var DefaultKeysOnUpdate = func(err error) {
+	if err != nil {
+		slog.Error("cryptobox: cipher keyring reload failed; keeping previous keys", "error", err)
+		return // err
+	}
+	slog.Info("cryptobox: cipher keyring reloaded")
+}
+
+// drainKeyFileWatch consumes the WatchFile error channel of the process-wide default
+// keyring, logging each reload outcome: nil = a successful reload (rotated keys picked up),
+// non-nil = a reload failure (the previous keys stay in effect — see KeyFile.Load). Without
+// a reader the channel's non-blocking sends would drop these silently, blinding operators
+// to a broken rotation. It ends when the channel closes (process exit for the default watch).
+func drainKeyFileWatch(errc <-chan error) {
+	hook := DefaultKeysOnUpdate
+	if hook == nil {
+		hook = func(_ error) {}
+	}
+	for err := range errc {
+		hook(err)
+	}
 }
 
 func Environment(namespace ...string) env.Options {
@@ -179,7 +278,7 @@ func systemFile(name string) string {
 func defaultCipherFile(keyring, filename string) string {
 	// input: specified ?
 	if cmp.Or(keyring, filename) != "" {
-		return "" // so use input
+		return filename // so use input
 	}
 	// default WBTL_CRYPTO_CIPHER_KEYFILE
 	return systemFile(systemCipherFile)
