@@ -3,9 +3,9 @@ module github.com/webitel/crypto/cryptostore/blobstore/gocloud
 go 1.25.0
 
 require (
-	github.com/webitel/crypto/cryptobox v0.2.0
-	github.com/webitel/crypto/cryptostore v0.2.0
-	github.com/webitel/crypto/cryptostore/blobstore v0.2.0
+	github.com/webitel/crypto/cryptobox v0.3.0
+	github.com/webitel/crypto/cryptostore v0.3.0
+	github.com/webitel/crypto/cryptostore/blobstore v0.3.0
 	gocloud.dev v0.46.0
 )
 
@@ -59,7 +59,7 @@ require (
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
-	github.com/webitel/crypto/env v0.1.0 // indirect
+	github.com/webitel/crypto/env v0.2.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
