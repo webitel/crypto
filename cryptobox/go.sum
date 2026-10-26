@@ -1,5 +1,5 @@
-github.com/webitel/crypto/env v0.1.0 h1:bIWQgAwPcThnuX6gOQmWUubVTZrnnavukya8dSXZwRc=
-github.com/webitel/crypto/env v0.1.0/go.mod h1:/jyzvmqAY6KGRwiV4oCWaBAeZOW51j1JdgswUnIPxqo=
+github.com/webitel/crypto/env v0.2.0 h1:WSw59p7FBqhc26O8f9HCM2Sgpe1UplFf8t2nEv/pC7I=
+github.com/webitel/crypto/env v0.2.0/go.mod h1:/jyzvmqAY6KGRwiV4oCWaBAeZOW51j1JdgswUnIPxqo=
 golang.org/x/crypto v0.54.0 h1:YLIA59K4fiNzHzjnZt2tUJQjQtUWfWbeHBqKtk3eScw=
 golang.org/x/crypto v0.54.0/go.mod h1:KWL8ny2AZdGR2cWmzeHrp2azQPGogOv+HeQaVEXC2dk=
 golang.org/x/sys v0.47.0 h1:o7XGOvZQCADBQQ4Y7VNq2dRWQR7JmOUW8Kxx4ZsNgWs=
