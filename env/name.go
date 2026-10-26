@@ -6,7 +6,7 @@ import (
 )
 
 // Name is an environment-variable name or namespace: segments joined by underscores,
-// such as "WBTL_CRYPTO_CIPHER_KEYS". It builds namespaced keys ([Name.Name], [Name.With])
+// such as "CRYPTO_CIPHER_KEYS". It builds namespaced keys ([Name.Name], [Name.With])
 // and validates them ([Name.IsValid], [Name.Err], [Name.Must]). The empty Name is invalid.
 type Name string
 
@@ -23,7 +23,7 @@ func (s Name) Name(name ...string) string {
 }
 
 // With is like [Name.Name] but returns the joined result as a Name, for building a deeper
-// namespace step by step: Name("WBTL").With("CRYPTO").With("SEARCH") == "WBTL_CRYPTO_SEARCH".
+// namespace step by step: Name("CRYPTO").With("SEARCH").With("KEYRING") == "CRYPTO_SEARCH_KEYRING".
 func (s Name) With(name ...string) Name {
 	return Name(joinName(string(s), name))
 }

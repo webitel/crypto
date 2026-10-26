@@ -105,13 +105,13 @@ func SetDefault(use Cipher) {
 }
 
 // DefaultKeys returns the process-wide cipher keyring, resolved from the environment
-// exactly once (sync.Once): WBTL_CRYPTO_CIPHER_KEYRING / _KEYFILE, and when neither is set,
+// exactly once (sync.Once): CRYPTO_CIPHER_KEYRING / _KEYFILE, and when neither is set,
 // the well-known system file <SystemDir>/.cipher. The result (ring or error) is
 // memoized for the life of the process — a caller that needs keys needs them now, so
 // a resolution failure is returned to every caller immediately rather than retried
 // (which under load would mean many callers hammering an unavailable/broken source).
 //
-// WBTL_CRYPTO_CIPHER_KEYFILE_POLL (a time.Duration, e.g. "5s") enables hot-reload: when
+// CRYPTO_CIPHER_KEYFILE_POLL (a time.Duration, e.g. "5s") enables hot-reload: when
 // positive, a background watcher polls the file-backed keyring at that interval and swaps
 // in rotated keys WITHOUT a process restart (rotation = add a higher-KID key to the file;
 // old keys stay for decrypt — do not delete keys still protecting data). It is clamped up
@@ -153,7 +153,7 @@ func DefaultKeys() (*Keyring, error) {
 		// WatchFile(ctx) and install it via SetDefault instead.
 		if setup.FilePoll > 0 {
 			if setup.Filename == "" {
-				slog.Warn("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL set but the cipher keyring is inline; ignoring (nothing to watch)")
+				slog.Warn("cryptobox: CRYPTO_CIPHER_KEYFILE_POLL set but the cipher keyring is inline; ignoring (nothing to watch)")
 			} else {
 				go drainKeyFileWatch(mod.keys.ring.WatchFile(context.Background()))
 			}
@@ -162,12 +162,12 @@ func DefaultKeys() (*Keyring, error) {
 	return mod.keys.ring, mod.keys.err
 }
 
-// MinKeyFilePoll is the smallest accepted WBTL_CRYPTO_CIPHER_KEYFILE_POLL interval: a
+// MinKeyFilePoll is the smallest accepted CRYPTO_CIPHER_KEYFILE_POLL interval: a
 // positive value below it is raised to this floor so a misconfiguration cannot hammer the
 // filesystem. 0 (the default) disables watching entirely.
 const MinKeyFilePoll = time.Second
 
-// parseKeyFilePoll interprets the WBTL_CRYPTO_CIPHER_KEYFILE_POLL value: "" or "0" → 0
+// parseKeyFilePoll interprets the CRYPTO_CIPHER_KEYFILE_POLL value: "" or "0" → 0
 // (no watch); a positive duration is clamped up to MinKeyFilePoll; a negative or malformed
 // value is an error (fail loud rather than silently skip the watch).
 func parseKeyFilePoll(text string) (time.Duration, error) {
@@ -176,10 +176,10 @@ func parseKeyFilePoll(text string) (time.Duration, error) {
 	}
 	every, err := time.ParseDuration(text)
 	if err != nil {
-		return 0, fmt.Errorf("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL %q: %w", text, err)
+		return 0, fmt.Errorf("cryptobox: CRYPTO_CIPHER_KEYFILE_POLL %q: %w", text, err)
 	}
 	if every < 0 {
-		return 0, fmt.Errorf("cryptobox: WBTL_CRYPTO_CIPHER_KEYFILE_POLL must not be negative: %q", text)
+		return 0, fmt.Errorf("cryptobox: CRYPTO_CIPHER_KEYFILE_POLL must not be negative: %q", text)
 	}
 	if every == 0 {
 		return 0, nil // explicit 0 → no watch
@@ -189,7 +189,7 @@ func parseKeyFilePoll(text string) (time.Duration, error) {
 }
 
 // DefaultKeysOnUpdate is the hook invoked for every reload outcome of the default
-// keyring's file watcher (started by DefaultKeys when WBTL_CRYPTO_CIPHER_KEYFILE_POLL is
+// keyring's file watcher (started by DefaultKeys when CRYPTO_CIPHER_KEYFILE_POLL is
 // set): err == nil means a successful reload (rotated keys are now in effect), a non-nil
 // err means the reload failed and the previous keys stay in effect (see KeyFile.Load).
 // The default implementation logs the outcome via slog.
@@ -227,30 +227,30 @@ func Environment(namespace ...string) env.Options {
 }
 
 // defaultSystemDir is the well-known system directory for crypto configuration when
-// WBTL_CRYPTO_DIR is unset. On Debian/systemd it pairs with StateDirectory=webitel/crypto.
+// CRYPTO_DIR is unset. On Debian/systemd it pairs with StateDirectory=cryptoctl.
 //
 // It is a var (not a const) so an ops build can bake in a different default with no code
 // change and no environment variable, via the linker:
 //
-//	go build -ldflags="-X 'github.com/webitel/crypto/cryptobox.defaultSystemDir=/opt/webitel/crypto'"
+//	go build -ldflags="-X 'github.com/webitel/crypto/cryptobox.defaultSystemDir=/opt/myapp/crypto'"
 //
-// WBTL_CRYPTO_DIR still overrides it at runtime; cryptostore.SystemDir delegates here, so
+// CRYPTO_DIR still overrides it at runtime; cryptostore.SystemDir delegates here, so
 // this single symbol sets the default for the whole stack.
-var defaultSystemDir = "/var/lib/webitel/crypto"
+var defaultSystemDir = "/var/lib/cryptoctl"
 
 // systemCipherFile is the well-known cipher keyring file within SystemDir, tried by
-// Default when neither WBTL_CRYPTO_CIPHER_KEYRING nor _FILE is set. The leading dot
+// Default when neither CRYPTO_CIPHER_KEYRING nor _FILE is set. The leading dot
 // marks it as secret material. Higher layers (cryptostore) keep their own well-known
 // files in the same dir (e.g. .search for the blind-index keyring).
 const systemCipherFile = ".cipher"
 
 // SystemDir is the well-known directory for system-level crypto configuration:
-// WBTL_CRYPTO_DIR, or /var/lib/webitel/crypto by default. DevOps populates it (the
+// CRYPTO_DIR, or /var/lib/cryptoctl by default. DevOps populates it (the
 // .cipher keyring here; higher layers add their own files) so a deployment can run
 // with no environment variables at all. It is the single source of truth for the
 // directory — cryptostore.SystemDir delegates here.
 func SystemDir() string {
-	// WBTL_CRYPTO_DIR
+	// CRYPTO_DIR
 	dir := mod.env.Getenv("DIR")
 	if dir != "" {
 		return dir
@@ -280,7 +280,7 @@ func defaultCipherFile(keyring, filename string) string {
 	if cmp.Or(keyring, filename) != "" {
 		return filename // so use input
 	}
-	// default WBTL_CRYPTO_CIPHER_KEYFILE
+	// default CRYPTO_CIPHER_KEYFILE
 	return systemFile(systemCipherFile)
 }
 

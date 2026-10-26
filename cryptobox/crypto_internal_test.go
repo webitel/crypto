@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// TestParseKeyFilePoll covers WBTL_CRYPTO_CIPHER_KEYFILE_POLL parsing: unset/zero disable
+// TestParseKeyFilePoll covers CRYPTO_CIPHER_KEYFILE_POLL parsing: unset/zero disable
 // the watch, a sub-minimum positive value is clamped up to MinKeyFilePoll, and a negative
 // or malformed value is a loud error (never a silent "watch off").
 func TestParseKeyFilePoll(t *testing.T) {

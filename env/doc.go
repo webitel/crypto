@@ -11,18 +11,19 @@
 // # Namespaces
 //
 // Every key lives under a namespace. [Name] builds a namespaced key by joining segments
-// with a single underscore: "APP" under the root "WBTL" is "WBTL_APP", and a "DEBUG"
-// lookup there resolves to WBTL_APP_DEBUG. Code names only the leaf key; the namespace is
+// with a single underscore: "DEBUG" under the namespace "APP" resolves to APP_DEBUG, and
+// "APP" nested under "MY" is "MY_APP". Code names only the leaf key; the namespace is
 // carried by the [Options] value, so prefixes are never repeated by hand — that is the
 // "clean code" the segmentation buys.
 //
 // # Usage
 //
-// The package-level [Getenv], [LookupEnv] and [Environment] operate under the global
-// WBTL_ root. [Environment] returns an [Options] nested one or more segments deeper; a
-// component builds one reader and reads all its keys through [Options.Apply]:
+// The package-level [Getenv], [LookupEnv] and [Environment] operate under the empty
+// root namespace, so a key is read as named. [Environment] returns an [Options] nested
+// one or more segments deeper; a component builds one reader and reads all its keys
+// through [Options.Apply]:
 //
-//	app := env.Environment("APP") // reads WBTL_APP_*
+//	app := env.Environment("APP") // reads APP_*
 //
 //	var name string
 //	var debug bool
@@ -31,8 +32,8 @@
 //		env.Bool("DEBUG", func(v bool, err error) { debug = v }),
 //	)
 //
-// The WBTL_ root is only the package default. You can always describe an environment for
-// a namespace of your own by building an [Options] directly:
+// You can also describe an environment for a namespace of your own by building an
+// [Options] directly:
 //
 //	mypkg := env.Options{Namespace: env.Name("MY_PKG")} // reads MY_PKG_*
 package env

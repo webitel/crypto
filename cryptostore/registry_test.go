@@ -46,7 +46,7 @@ func Test_getScheme(t *testing.T) {
 		{name: "empty opaque", rawDSN: "postgres:", wantScheme: "postgres", wantOpaque: ""},
 		{name: "keyword opaque", rawDSN: "postgres:host=example.org port=5432", wantScheme: "postgres", wantOpaque: "host=example.org port=5432"},
 		{name: "url opaque", rawDSN: "postgres://user:pass@host:5432/db", wantScheme: "postgres", wantOpaque: "//user:pass@host:5432/db"},
-		{name: "path opaque", rawDSN: "blobfs:/var/lib/webitel/blobs", wantScheme: "blobfs", wantOpaque: "/var/lib/webitel/blobs"},
+		{name: "path opaque", rawDSN: "blobfs:/var/lib/cryptoctl/blobs", wantScheme: "blobfs", wantOpaque: "/var/lib/cryptoctl/blobs"},
 		{name: "bucket opaque", rawDSN: "s3://my-bucket", wantScheme: "s3", wantOpaque: "//my-bucket"},
 
 		// legal scheme punctuation ([+.-] allowed after the first letter)

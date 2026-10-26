@@ -105,19 +105,19 @@ codec, _ := schema.NewCodec(schema.DefaultOptions(), schema.WithBaseline(baselin
 
 | Змінна | Призначення |
 |---|---|
-| `WBTL_CRYPTO_SCHEMA[_FILE]` | overlay-схема адміністратора (опційно; `_FILE` — шлях, має пріоритет) |
+| `CRYPTO_SCHEMA[_FILE]` | overlay-схема адміністратора (опційно; `_FILE` — шлях, має пріоритет) |
 
-`WBTL_CRYPTO_SCHEMA` приймає **дві форми**: inline `schema.Config`, або include-директиву
+`CRYPTO_SCHEMA` приймає **дві форми**: inline `schema.Config`, або include-директиву
 з **вибірковим списком файлів** (не вся тека). Відносні `dir`/`files` анкоряться до
-`SystemDir` (`WBTL_CRYPTO_DIR`), `dir` за-замовч. `schema.d`:
+`SystemDir` (`CRYPTO_DIR`), `dir` за-замовч. `schema.d`:
 
 ```bash
-WBTL_CRYPTO_SCHEMA='{"version":1,"units":{...}}'                       # inline
-WBTL_CRYPTO_SCHEMA='{"dir":"schema.d","files":["directory.json","cases.json"]}'  # include
+CRYPTO_SCHEMA='{"version":1,"units":{...}}'                       # inline
+CRYPTO_SCHEMA='{"dir":"schema.d","files":["directory.json","cases.json"]}'  # include
 ```
 
 - `schema.DefaultOptions()` — резолвить увесь кодек із середовища: base = `cryptostore.Default()`,
-  baseline = `Baseline()` (з `Register`), overlay = `DefaultConfig()` (`WBTL_CRYPTO_SCHEMA[_FILE]`).
+  baseline = `Baseline()` (з `Register`), overlay = `DefaultConfig()` (`CRYPTO_SCHEMA[_FILE]`).
   Для ops-тулів достатньо `schema.NewCodec(schema.DefaultOptions())`.
 - Явні опції: `WithBase(core)`, `WithBaseline(cfg)` (запінений мінімум), `WithOverlay(cfg)`
   (розширення). `DefaultConfig()` дає env-overlay для явного `WithOverlay(DefaultConfig())`.

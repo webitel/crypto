@@ -66,7 +66,7 @@ func (c *Codec) IndexField() string { return c.idxField }
 // It is the reusable fail-fast check for record-oriented stores that write the
 // index column (call it at open time); codecs that only encrypt/decrypt may ignore
 // it — search simply stays disabled. The keyring is whatever the base codec was
-// built with (an explicit one, or the env-default WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}).
+// built with (an explicit one, or the env-default CRYPTO_SEARCH_{KEYRING,KEYFILE}).
 func (c *Codec) RequireIndex() error {
 	if c.Schema().HasSearchable() && !c.base.CanIndex() {
 		return fmt.Errorf("cryptostore/schema: searchable fields require a keyring to construct blind-index tokens")

@@ -52,7 +52,7 @@
 - Підтримка шифрування **зашита (baseline) у схему БД** + адміністратору дається
   **обмежений перелік опційних колонок**, які можна шифрувати. Baseline пінниться
   (`Codec.SetBaseline`), overlay адміна накладається через `schema.MergeConfig` —
-  джерело overlay: `WatchConfig`-файл або env `WBTL_CRYPTO_SCHEMA[_FILE]`
+  джерело overlay: `WatchConfig`-файл або env `CRYPTO_SCHEMA[_FILE]`
   (`schema.NewCodec(schema.DefaultOptions())`); overlay лише додає/вмикає `search`, ніколи не послаблює.
 - Скалярні колонки під шифрування **заздалегідь переводяться в `bytea`** (окремою
   міграцією БД). `json[b]`-документи лишаються `json[b]`.
@@ -179,7 +179,7 @@ CREATE FUNCTION cryptostore_pending(v jsonb, primary_kid integer) RETURNS boolea
 - **Нерота­ційний** з операційних причин (токени не несуть версію ключа → ротація =
   повний reindex), не через меншу цінність. Витік → ротувати + reindex + вважати
   пошукові значення скомпрометованими.
-- Технічно — це окремий `cryptobox.Keyring` (`WBTL_CRYPTO_SEARCH_KEYRING`/`_FILE`),
+- Технічно — це окремий `cryptobox.Keyring` (`CRYPTO_SEARCH_KEYRING`/`_FILE`),
   токени дає матеріал його **primary**-ключа. Keyring тут — задля єдиного формату/
   завантаження та як ґрунт під майбутні версіоновані токени (беклог), а не для
   буденної ротації.

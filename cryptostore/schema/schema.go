@@ -10,15 +10,15 @@ import (
 )
 
 // The Default* helpers (DefaultConfig, DefaultOptions) resolve their values from the
-// environment (the WBTL_CRYPTO_* variables). Anything named Default* is "what we take
+// environment (the CRYPTO_* variables). Anything named Default* is "what we take
 // as configuration by default, from the environment"; every other constructor input
 // is explicit. See also cryptostore.Default (the env-resolved value codec).
 
 // DefaultConfig loads the admin overlay schema from the environment, in precedence
 // order:
 //
-//   - WBTL_CRYPTO_SCHEMA_FILE — a path to a single schema.Config file; else
-//   - WBTL_CRYPTO_SCHEMA — an inline value decoded as an IncludeConfig: either an
+//   - CRYPTO_SCHEMA_FILE — a path to a single schema.Config file; else
+//   - CRYPTO_SCHEMA — an inline value decoded as an IncludeConfig: either an
 //     inline schema.Config document ({"version":1,"units":{…}}) or an include
 //     directive naming files to load and merge ({"dir":"schema.d","files":["a.json",
 //     "b.json"]}). Relative dir/files anchor to SystemDir (cryptostore.SystemDir),
@@ -29,7 +29,7 @@ import (
 // is meant to be merged onto a code baseline (see MergeConfig / WithOverlay).
 func DefaultConfig() (*Config, error) {
 	var inline, filename string
-	// [WBTL_CRYPTO_SCHEMA][_FILE]
+	// [CRYPTO_SCHEMA][_FILE]
 	cryptostore.Environment().Apply(
 		env.String("SCHEMA", func(v string, _ bool) { inline = v }),
 		env.String("SCHEMA_FILE", func(v string, _ bool) { filename = v }),
@@ -40,7 +40,7 @@ func DefaultConfig() (*Config, error) {
 	if inline != "" {
 		var include IncludeConfig // inline schema.Config, or an {dir, files} include directive
 		if err := json.Unmarshal([]byte(inline), &include); err != nil {
-			return nil, fmt.Errorf("cryptostore/schema: WBTL_CRYPTO_SCHEMA: %w", err)
+			return nil, fmt.Errorf("cryptostore/schema: CRYPTO_SCHEMA: %w", err)
 		}
 		return include.Config(cryptostore.SystemDir())
 	}
@@ -129,7 +129,7 @@ func WithOverlay(overlay *Config) CodecOption {
 
 // DefaultOptions resolves the entire codec from the environment/process defaults:
 // base = cryptostore.Default(), baseline = Baseline() (registered via Register),
-// overlay = DefaultConfig() (WBTL_CRYPTO_SCHEMA[_FILE]). It is the one-call assembly
+// overlay = DefaultConfig() (CRYPTO_SCHEMA[_FILE]). It is the one-call assembly
 // for an ops tool or a service that takes everything from the environment:
 //
 //	codec, err := schema.NewCodec(schema.DefaultOptions())

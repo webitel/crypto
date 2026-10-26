@@ -24,8 +24,8 @@ cryptoctl **не має власного конфіга ключів** — во�
 store-dir. Файли — **JSON або JSONC** (коментарі `//`, `/* */` і висячі коми дозволені).
 
 ```bash
-export WBTL_CRYPTO_STORE_DIR=/etc/cryptostore/store.d    # прапорець --store-dir
-export WBTL_CRYPTO_SCHEMA_DIR=/etc/cryptostore/schema.d  # прапорець --schema-dir
+export CRYPTO_STORE_DIR=/etc/cryptostore/store.d    # прапорець --store-dir
+export CRYPTO_SCHEMA_DIR=/etc/cryptostore/schema.d  # прапорець --schema-dir
 ```
 
 - **`--store-dir`** (дефолт `store.d`) — тека з файлами сховищ, по одному
@@ -50,8 +50,8 @@ cryptoctl --store directory --store call_center status   # лише ці два 
 
 | | env | системна тека (fallback) |
 |---|---|---|
-| **cipher** (шифрування значень) | `WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}` | `<SystemDir>/.cipher` |
-| **search** (blind-index; primary дає токени пошуку) | `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}` | `<SystemDir>/.search` |
+| **cipher** (шифрування значень) | `CRYPTO_CIPHER_{KEYRING,KEYFILE}` | `<SystemDir>/.cipher` |
+| **search** (blind-index; primary дає токени пошуку) | `CRYPTO_SEARCH_{KEYRING,KEYFILE}` | `<SystemDir>/.search` |
 
 search-ключ необов'язковий: якщо його немає ніде — пошук вимкнено. Ключі свідомо
 **не** конфігуряться у cryptoctl і не шукаються в `$PWD`/поруч-із-бінарником: секрети
@@ -61,15 +61,15 @@ search-ключ необов'язковий: якщо його немає нід
 `/path`-ключі в keyring) має бути **приватним** — доступ лише власнику (плюс толерований
 group-read для k8s `fsGroup`): `0600`, `0400`, `0640`, `0440`. За замовчуванням файл із
 ширшими правами **відхиляється**. Послабити до попередження: прапорець **`--unsafe-keys`**
-або `WBTL_CRYPTO_KEYFILE_POLICY=unsafe`.
+або `CRYPTO_KEYFILE_POLICY=unsafe`.
 
 ### Системна тека
 
-`SystemDir` = `WBTL_CRYPTO_DIR` або дефолт **`/var/lib/webitel/crypto`** (на
-Debian/systemd — `StateDirectory=webitel/crypto`). Наповни її — і все працює без env:
+`SystemDir` = `CRYPTO_DIR` або дефолт **`/var/lib/cryptoctl`** (на
+Debian/systemd — `StateDirectory=cryptoctl`). Наповни її — і все працює без env:
 
 ```
-/var/lib/webitel/crypto/
+/var/lib/cryptoctl/
 ├── .cipher       # cipher keyring   (фолбек після env)
 ├── .search       # search keyring   (фолбек після env)
 ├── store.d/      # конфіги сховищ   (фолбек для --store-dir)
@@ -161,7 +161,7 @@ cryptoctl search public.users email a@x.io     # ключ+токен для то
 найперший ключ. За замовчуванням друкує готову keyring-**фразу** випадкової довжини
 40–64 символи (алфавіт без керівних символів keyring `, [ ] / - \ " ' \``);
 ≥256 біт ентропії, придатна для `cipher`/`search`
-чи `WBTL_CRYPTO_*_KEYRING`. `--kid K` додає префікс `[K]` (напр. для наступного KID при
+чи `CRYPTO_*_KEYRING`. `--kid K` додає префікс `[K]` (напр. для наступного KID при
 ротації). `--file` пише сирі байти у файл (0600) для форми `*_FILE`/FileMaterial;
 `--bytes N` (20–256, лише з `--file`) задає їх кількість.
 
@@ -170,7 +170,7 @@ cryptoctl keygen                          # → фраза 40–64 симв. (�
 cryptoctl keygen --kid 2                  # → [2]<фраза>  (наступний KID)
 cryptoctl keygen --file /run/secrets/cipher.key --bytes 32   # сирі байти у файл
 # приклад використання:
-export WBTL_CRYPTO_CIPHER_KEYRING="$(cryptoctl keygen)"
+export CRYPTO_CIPHER_KEYRING="$(cryptoctl keygen)"
 ```
 
 ### `encrypt [--text] [--out fmt] <plaintext|file:path>` — зашифрувати значення

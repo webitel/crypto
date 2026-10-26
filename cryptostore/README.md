@@ -60,7 +60,7 @@ box := cryptobox.NewBox(cryptobox.ChaCha20Poly1305, ring)
 
 // index — НЕЗАЛЕЖНИЙ keyring для blind-index (щоб ротація cipher-ключів не ламала
 // токени пошуку). nil → пошук вимкнено, SearchToken повертає ErrIndexKey.
-indexRing, _ := cryptobox.ParseKeyring(os.Getenv("WBTL_CRYPTO_SEARCH_KEYRING"))
+indexRing, _ := cryptobox.ParseKeyring(os.Getenv("CRYPTO_SEARCH_KEYRING"))
 
 codec, _ := cryptostore.NewCodec(box, indexRing)
 ```
@@ -83,13 +83,13 @@ codec, err := cryptostore.Default() // процес-глобальний *Codec,
 
 | Змінна | Призначення |
 |---|---|
-| `WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}` | keyring для шифрування значень (**обов'язково**) |
-| `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}` | keyring для blind-index (опційно; відсутній → пошук вимкнено) |
-| `WBTL_CRYPTO_DIR` | системна тека (дефолт `/var/lib/webitel/crypto`) |
+| `CRYPTO_CIPHER_{KEYRING,KEYFILE}` | keyring для шифрування значень (**обов'язково**) |
+| `CRYPTO_SEARCH_{KEYRING,KEYFILE}` | keyring для blind-index (опційно; відсутній → пошук вимкнено) |
+| `CRYPTO_DIR` | системна тека (дефолт `/var/lib/cryptoctl`) |
 
 `_KEYRING` містить ключі inline (розділювач — новий рядок або кома), `_KEYFILE` — шлях
 до файлу. **Системний фолбек:** якщо не задано ні env, ні `_KEYFILE`, читаються добре
-відомі файли `<WBTL_CRYPTO_DIR>/.cipher` і `/.search` — тож devops наповнює теку, і сервіс
+відомі файли `<CRYPTO_DIR>/.cipher` і `/.search` — тож devops наповнює теку, і сервіс
 працює без жодних змінних. Порядок: env → системний файл. (`.cipher`-фолбек живе у
 `cryptobox.Default`, тож будь-який сервіс на cryptobox його підхоплює; `.search` —
 тут, через `cryptostore.SearchKeys`.) Для нестандартних ключів — `cryptobox.NewKeyring` +

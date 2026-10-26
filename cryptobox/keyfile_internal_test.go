@@ -35,7 +35,7 @@ func TestNotPrivate(t *testing.T) {
 	}
 }
 
-// TestKeyFilePolicyFromEnv: only WBTL_CRYPTO_KEYFILE_POLICY=unsafe relaxes the check;
+// TestKeyFilePolicyFromEnv: only CRYPTO_KEYFILE_POLICY=unsafe relaxes the check;
 // empty, "strict", and any typo all fail safe to strict (reject a not-private file).
 func TestKeyFilePolicyFromEnv(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -60,7 +60,7 @@ func TestKeyFilePolicyFromEnv(t *testing.T) {
 		"unsafe": false,
 	}
 	for v, wantReject := range cases {
-		t.Setenv("WBTL_CRYPTO_KEYFILE_POLICY", v)
+		t.Setenv("CRYPTO_KEYFILE_POLICY", v)
 		gotReject := keyFilePolicyFromEnv()(p, info) != nil
 		if gotReject != wantReject {
 			t.Errorf("policy=%q: reject=%v, want %v", v, gotReject, wantReject)

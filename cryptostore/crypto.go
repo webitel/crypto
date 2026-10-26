@@ -11,9 +11,9 @@ import (
 )
 
 // Default returns the process-wide value codec assembled from the environment:
-// cryptobox.Default (WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}, or the well-known
+// cryptobox.Default (CRYPTO_CIPHER_{KEYRING,KEYFILE}, or the well-known
 // <SystemDir>/.cipher) for value encryption, and the optional SearchKeys
-// (WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}, or <SystemDir>/.search) for the blind index. It
+// (CRYPTO_SEARCH_{KEYRING,KEYFILE}, or <SystemDir>/.search) for the blind index. It
 // is built once, on the first call, and the same codec (or the same error) is
 // returned thereafter — so a service obtains a ready *Codec without wiring keyrings:
 //
@@ -42,7 +42,7 @@ func Default() (*Codec, error) {
 }
 
 // SearchKeys returns the blind-index keyring, resolved from the environment exactly
-// once (mirrors cryptobox.DefaultKeys, minus the Box): WBTL_CRYPTO_SEARCH_KEYRING / _KEYFILE,
+// once (mirrors cryptobox.DefaultKeys, minus the Box): CRYPTO_SEARCH_KEYRING / _KEYFILE,
 // and when neither is set, the well-known system file <SystemDir>/.search. Search is
 // OPTIONAL: with nothing configured anywhere it returns (nil, nil) and search stays
 // disabled. The result is memoized for the life of the process.
@@ -76,10 +76,10 @@ func Environment(namespace ...string) env.Options {
 // material, distinct from the config directories (store.d/, schema.d/). The cipher
 // keyring's well-known file (.cipher) is owned by cryptobox — its Default already
 // falls back to it, so cipherKeys need not check it here.
-const systemSearchFile = ".search" // search keyring → WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}
+const systemSearchFile = ".search" // search keyring → CRYPTO_SEARCH_{KEYRING,KEYFILE}
 
 // SystemDir is the well-known directory for system-level crypto configuration:
-// WBTL_CRYPTO_DIR, or /var/lib/webitel/crypto by default. DevOps populates it
+// CRYPTO_DIR, or /var/lib/cryptoctl by default. DevOps populates it
 // (.cipher, .search, and — for cryptoctl — store.d/, schema.d/) so a deployment can
 // run with no environment variables at all. It delegates to cryptobox.SystemDir, the
 // single source of truth for the directory.
@@ -111,5 +111,5 @@ var mod = struct {
 		err  error
 	}
 }{
-	env: cryptobox.Environment(), // WBTL_CRYPTO_*
+	env: cryptobox.Environment(), // CRYPTO_*
 }

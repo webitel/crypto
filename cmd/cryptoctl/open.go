@@ -8,8 +8,8 @@ import (
 )
 
 // openCodec is the value codec cryptoctl operates with: cryptostore.Default — the
-// process-wide codec assembled from the environment (WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE} or
-// <SystemDir>/.cipher for value encryption; WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE} or .search for
+// process-wide codec assembled from the environment (CRYPTO_CIPHER_{KEYRING,KEYFILE} or
+// <SystemDir>/.cipher for value encryption; CRYPTO_SEARCH_{KEYRING,KEYFILE} or .search for
 // the blind index). cryptoctl deliberately has no key config of its own, so it reads and
 // rewrites data with exactly the keys the services use. It is a var so a test (or an
 // embedder) can substitute a codec.

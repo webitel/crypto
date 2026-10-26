@@ -11,7 +11,7 @@ import (
 // init registers the "blobfs" DSN scheme. Import this package for its side effect
 // (e.g. _ "github.com/webitel/crypto/cryptostore/blobstore") to let cryptostore.OpenStore
 // build local-directory blob stores from configuration. The DSN is blobfs:<dir>,
-// e.g. blobfs:/var/lib/webitel/crypto — the opaque part is the directory.
+// e.g. blobfs:/var/lib/cryptoctl/blobs — the opaque part is the directory.
 //
 // Schemaless: a blob store encrypts whole objects and ignores the field schema.
 func init() {

@@ -46,7 +46,7 @@ func randomString(length int, alphabet string) (string, error) {
 //   - the keyring parser: excludes its control/escape chars  , [ ] / - \  so the
 //     phrase can't be misread as a separator, KID, file path, tombstone or escape;
 //   - a shell: excludes the quotes  " ' `  so pasting it inline into an env var,
-//     e.g.  export WBTL_CRYPTO_CIPHER_KEYRING="<phrase>"  , can't break the quoting.
+//     e.g.  export CRYPTO_CIPHER_KEYRING="<phrase>"  , can't break the quoting.
 const keygenAlpha = "!#$%&()*+.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ^_abcdefghijklmnopqrstuvwxyz{|}~"
 
 const (
@@ -75,7 +75,7 @@ const (
 
 // cmdKeygen generates a fresh, high-entropy key from crypto/rand. By default it
 // prints a ready-to-paste keyring entry (hex, safe from keyring control chars) for
-// WBTL_CRYPTO_CIPHER_KEYRING / WBTL_CRYPTO_SEARCH_KEYRING. With --file it writes raw key bytes
+// CRYPTO_CIPHER_KEYRING / CRYPTO_SEARCH_KEYRING. With --file it writes raw key bytes
 // to a file (0600) for the *_FILE / FileMaterial form. It needs no existing config.
 // keygenFlags registers the keygen command's flags on fs (shared by cmdKeygen and
 // `help keygen`).

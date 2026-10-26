@@ -50,7 +50,7 @@ All encryption/decryption happens **in code** — keyring material never reaches
 | `codec.go` | `Codec` struct + `NewCodec(cipher, index)`; `Cipher()` (raw), `SearchToken`, `PrimaryKID`, `CanIndex` |
 | `frame.go` | inline framing: `FrameBinary`/`UnframeBinary` (bytea), `FrameText`/`UnframeText` (json text tag); `Codec.Encrypt`/`Decrypt` (binary self-marking), `EncryptText`/`DecryptText`/`RecryptText` (json) |
 | `bindex.go` | `blindIndex` — HKDF-derived, domain-scoped deterministic search tokens over the index `*cryptobox.Keyring` |
-| `crypto.go` | env-backed process defaults: `Default()` (memoized `*Codec` — cipher via `cryptobox.Default`, search via `SearchKeys`), `SearchKeys()` (blind-index keyring from `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}`), `SystemDir()`, `Environment()` |
+| `crypto.go` | env-backed process defaults: `Default()` (memoized `*Codec` — cipher via `cryptobox.Default`, search via `SearchKeys`), `SearchKeys()` (blind-index keyring from `CRYPTO_SEARCH_{KEYRING,KEYFILE}`), `SystemDir()`, `Environment()` |
 | `registry.go` | `Register`/`RegisterSchemaless`/`Schemaless`/`Schemes`/`Scheme`/`DriverFunc`/`StoreOptions` + `OpenStore(ctx, opts)` — the DSN-scheme→driver registry and the per-store open primitive |
 | `store.go` | `Store` interface, `KeyUsage` |
 | `migrate.go` | `Migration` (`NewMigration`, `Usage`, `Run`, `CanRetire`), `MigrateOptions`/`MigrateResult`/`Progress` |
@@ -61,7 +61,7 @@ All encryption/decryption happens **in code** — keyring material never reaches
 |---|---|
 | `config.go` | the field-schema data model — `Config`/`Unit`/`FieldPolicy`/`FieldNested` + validation; loaders `ParseConfig`/`LoadConfig`/`LoadConfigFile`; `MergeConfig(base, overlay)` (overlay may add/enable, never relax) |
 | `codec.go` | `Codec`/`UnitCodec`: `EncodeRecords`/`DecodeRecords`/`SearchToken`, the `__cs_idx` column, `SetBaseline`, `Unit` |
-| `schema.go` | codec assembly: `NewCodec(opts...)` with `WithBase`/`WithBaseline`/`WithOverlay`/`DefaultOptions`; `DefaultConfig` (env overlay `WBTL_CRYPTO_SCHEMA[_FILE]`), `Register`/`Baseline`, `MustParseConfig`. Default* helpers resolve from the environment |
+| `schema.go` | codec assembly: `NewCodec(opts...)` with `WithBase`/`WithBaseline`/`WithOverlay`/`DefaultOptions`; `DefaultConfig` (env overlay `CRYPTO_SCHEMA[_FILE]`), `Register`/`Baseline`, `MustParseConfig`. Default* helpers resolve from the environment |
 | `watch.go` | `Codec.WatchConfig(ctx, path)` — hot-reload the overlay from a file |
 | `include.go` | `IncludeConfig` — the JSON include directive (`{dir, files}`) that merges many schema files into one (used by store configs) |
 | `jsonb.go` | `DecryptJSONB` — decrypt a whole jsonb document's encrypted attributes |
@@ -109,13 +109,13 @@ unit from a (possibly dynamic) `*Unit`.
 **Env-default facade (less integration boilerplate).** A service integrating the library
 avoids the manual keyring→Box→Codec→schema.Codec chain:
 - `cryptostore.Default()` — a `sync.Once`-memoized process-wide `*Codec` from
-  `WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}` (+ optional `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}`).
+  `CRYPTO_CIPHER_{KEYRING,KEYFILE}` (+ optional `CRYPTO_SEARCH_{KEYRING,KEYFILE}`).
 - `schema.NewCodec(opts...)` — options-based assembly. `schema.DefaultOptions()` pulls the
   whole codec from the environment (base `cryptostore.Default()`, baseline `Baseline()`,
   overlay `DefaultConfig()`); a service overrides just its baseline with `WithBaseline`.
   Env access is opt-in: bare `NewCodec` never touches the environment.
 - `schema.DefaultConfig()` / `MustParseConfig` are the building blocks (Default* = from env).
-  `WBTL_CRYPTO_SCHEMA` is decoded as an `IncludeConfig` — inline `Config` or an `{dir,files}`
+  `CRYPTO_SCHEMA` is decoded as an `IncludeConfig` — inline `Config` or an `{dir,files}`
   include directive (relative paths anchored to `SystemDir`) — so ops can select overlay files by name.
 
 The agent path — the multi-store, config-file orchestrator — lives in `cmd/cryptoctl`,
@@ -172,15 +172,15 @@ skip rules). They match the `cbox:` / `\x00\x01` framing; keep them in sync with
 
 | Variable | Purpose |
 |---|---|
-| `WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}` | value-encryption keyring (**required**) |
-| `WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE}` | blind-index keyring (optional; absent → search disabled) |
-| `WBTL_CRYPTO_SCHEMA[_FILE]` | admin overlay (optional; `_FILE` = path, wins). `SCHEMA` is an inline `Config` **or** an include directive `{dir,files}` (selective file list; relative paths anchor to `SystemDir`) |
-| `WBTL_CRYPTO_DIR` | system config dir (default `/var/lib/webitel/crypto`) |
+| `CRYPTO_CIPHER_{KEYRING,KEYFILE}` | value-encryption keyring (**required**) |
+| `CRYPTO_SEARCH_{KEYRING,KEYFILE}` | blind-index keyring (optional; absent → search disabled) |
+| `CRYPTO_SCHEMA[_FILE]` | admin overlay (optional; `_FILE` = path, wins). `SCHEMA` is an inline `Config` **or** an include directive `{dir,files}` (selective file list; relative paths anchor to `SystemDir`) |
+| `CRYPTO_DIR` | system config dir (default `/var/lib/cryptoctl`) |
 
 `_FILE` variants hold a path; the keyring format is cryptobox's. Resolution order for keys:
 env → **well-known system file**. `SystemDir()` (`crypto.go`) delegates to
-`cryptobox.SystemDir()` (the single source of truth) = `WBTL_CRYPTO_DIR` or
-`/var/lib/webitel/crypto`. The **cipher** fallback to `<SystemDir>/.cipher` lives in
+`cryptobox.SystemDir()` (the single source of truth) = `CRYPTO_DIR` or
+`/var/lib/cryptoctl`. The **cipher** fallback to `<SystemDir>/.cipher` lives in
 **cryptobox** — `cryptobox.DefaultKeys` consults it (lazily, once) when neither env source
 is set, so any service on cryptobox (not only cryptostore) picks it up; `cryptostore.Default`
 goes through it. The **search** fallback to `<SystemDir>/.search` stays here (blind-index is
@@ -198,11 +198,11 @@ Storeless crypto commands (need only keys, no store config): `keygen`, `encrypt`
 `encrypt-file`/`decrypt-file`, `search`. cryptoctl has no key config: the codec is
 `cryptostore.Default` (env / system files; see `open.go`'s `var openCodec`). Its whole config
 is the store set — one JSON/JSONC file per store in `-store-dir` (default `store.d`; env
-`WBTL_CRYPTO_STORE_DIR`); `-store <file>` (repeatable) selects specific files there, else all
+`CRYPTO_STORE_DIR`); `-store <file>` (repeatable) selects specific files there, else all
 are loaded (`loadStores`, `config.go`). A store's `schema` section is a `schema.IncludeConfig`
 (`schema/include.go`): empty (null/{}), an inline `schema.Config`, or an include directive
 `{dir, files}` (files required; dir default the shared `-schema-dir`, env
-`WBTL_CRYPTO_SCHEMA_DIR`, else `schema.d` beside the store file) whose files `MergeConfig` into
+`CRYPTO_SCHEMA_DIR`, else `schema.d` beside the store file) whose files `MergeConfig` into
 one — so many services' per-DB-schema files attach to one connection unedited. An ops build can
 compile in a pinned baseline via `schema.Register` (init side-effect), which the agent
 merges under the overlay (`resolveSchema`); the storage drivers stay baseline-free.

@@ -5,30 +5,30 @@ import (
 	"strconv"
 )
 
-// module is the process-wide reader rooted at the global WBTL_ namespace. It backs the
+// module is the process-wide reader rooted at the empty namespace. It backs the
 // package-level Getenv, LookupEnv and Environment helpers.
 var module = Options{
-	Namespace: Name("WBTL"),
+	Namespace: Name(""),
 	LookupEnv: os.LookupEnv,
 }
 
-// sep separates namespace segments in a key: WBTL_CRYPTO_CIPHER_KEYS.
+// sep separates namespace segments in a key: CRYPTO_CIPHER_KEYS.
 const sep = "_"
 
-// Getenv returns the value of key within the global WBTL_ namespace, or "" if it is unset.
+// Getenv returns the value of key within the root namespace, or "" if it is unset.
 // It is shorthand for the package reader's [Options.Getenv].
 func Getenv(key string) string {
 	return module.Getenv(key)
 }
 
-// LookupEnv returns the value of key within the global WBTL_ namespace and whether it was
+// LookupEnv returns the value of key within the root namespace and whether it was
 // set — the namespaced counterpart of [os.LookupEnv].
 func LookupEnv(key string) (string, bool) {
 	return module.Lookup(key)
 }
 
-// Environment returns an [Options] rooted at the global WBTL_ namespace, nested under the
-// given segments: Environment("CRYPTO", "SEARCH") reads WBTL_CRYPTO_SEARCH_* keys. Build
+// Environment returns an [Options] rooted at the empty namespace, nested under the
+// given segments: Environment("CRYPTO", "SEARCH") reads CRYPTO_SEARCH_* keys. Build
 // one per component and share it, so every lookup is consistently scoped.
 func Environment(namespace ...string) Options {
 	return Options{
@@ -39,7 +39,7 @@ func Environment(namespace ...string) Options {
 // Options is a namespaced environment reader: it prepends Namespace to every looked-up
 // key and reads it through LookupEnv (the process environment when LookupEnv is nil).
 type Options struct {
-	Namespace Name                        // key prefix, e.g. "WBTL_CRYPTO"
+	Namespace Name                        // key prefix, e.g. "CRYPTO"
 	LookupEnv func(string) (string, bool) // value source; nil falls back to os.LookupEnv
 }
 

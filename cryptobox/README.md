@@ -22,7 +22,7 @@ import (
 
 ctx := context.Background()
 
-// Використання Default (WBTL_CRYPTO_CIPHER_KEYRING або WBTL_CRYPTO_CIPHER_KEYFILE)
+// Використання Default (CRYPTO_CIPHER_KEYRING або CRYPTO_CIPHER_KEYFILE)
 blob, err := cryptobox.Encrypt(ctx, []byte("secret-api-key"))
 plain, err := cryptobox.Decrypt(ctx, blob)
 
@@ -40,30 +40,30 @@ plain, err = box.Decrypt(ctx, blob)
 
 | Змінна | Призначення |
 |---|---|
-| `WBTL_CRYPTO_CIPHER_KEYRING` | Inline keyring-рядок (один або кілька ключів) |
-| `WBTL_CRYPTO_CIPHER_KEYFILE` | Шлях до файлу з keyring-рядком; підтримує hot-reload |
-| `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` | Період опитування keyfile для авто hot-reload (`time.Duration`, напр. `5s`); `0`/не задано — вимкнено. Див. нижче |
-| `WBTL_CRYPTO_DIR` | Системна тека (дефолт `/var/lib/webitel/crypto`); фолбек для `.cipher` |
+| `CRYPTO_CIPHER_KEYRING` | Inline keyring-рядок (один або кілька ключів) |
+| `CRYPTO_CIPHER_KEYFILE` | Шлях до файлу з keyring-рядком; підтримує hot-reload |
+| `CRYPTO_CIPHER_KEYFILE_POLL` | Період опитування keyfile для авто hot-reload (`time.Duration`, напр. `5s`); `0`/не задано — вимкнено. Див. нижче |
+| `CRYPTO_DIR` | Системна тека (дефолт `/var/lib/cryptoctl`); фолбек для `.cipher` |
 
-Можна вказувати лише одну з `*_KEYRING`/`*_KEYFILE`. `WBTL_CRYPTO_CIPHER_KEYFILE` має пріоритет якщо задані обидві.
+Можна вказувати лише одну з `*_KEYRING`/`*_KEYFILE`. `CRYPTO_CIPHER_KEYFILE` має пріоритет якщо задані обидві.
 
-Namespace — `WBTL_` → `CRYPTO` → `CIPHER` (див. `github.com/webitel/crypto/env`).
+Namespace — `CRYPTO` → `CIPHER` (див. `github.com/webitel/crypto/env`).
 
 **Well-known файл.** Якщо жодна зі змінних `*_KEYRING`/`*_KEYFILE` не задана, `DefaultKeys`
-(при першому використанні — `sync.Once`) пробує well-known файл **`<WBTL_CRYPTO_DIR>/.cipher`**
-(дефолт `/var/lib/webitel/crypto/.cipher`). Тобто devops кладе keyring туди — і сервіс на
+(при першому використанні — `sync.Once`) пробує well-known файл **`<CRYPTO_DIR>/.cipher`**
+(дефолт `/var/lib/cryptoctl/.cipher`). Тобто devops кладе keyring туди — і сервіс на
 cryptobox працює **без жодних змінних середовища**. Env має пріоритет; файл читається лише
 коли існує (інакше поведінка як була). Резолв відбувається **раз** і мемоізується (успіх або
-помилка). Для авто hot-reload дефолтного keyfile задай `WBTL_CRYPTO_CIPHER_KEYFILE_POLL`
+помилка). Для авто hot-reload дефолтного keyfile задай `CRYPTO_CIPHER_KEYFILE_POLL`
 (див. нижче); для повного контролю над життєвим циклом — збери власний `NewKeyring`+`WatchFile`
-і встанови його через `SetDefault`. На Debian/systemd тека пасує `StateDirectory=webitel/crypto`.
+і встанови його через `SetDefault`. На Debian/systemd тека пасує `StateDirectory=cryptoctl`.
 
 ### Права доступу до файлів ключів
 
 Файл ключів (`*_KEYFILE`, well-known `.cipher`, а також `/path`-ключі всередині
 keyring) має бути **приватним** — доступ лише власнику (толерується group-read для
 Kubernetes `fsGroup`): `0600`, `0400`, `0640`, `0440`. За замовчуванням файл із ширшими
-правами при завантаженні **відхиляється**. Керується змінною `WBTL_CRYPTO_KEYFILE_POLICY`:
+правами при завантаженні **відхиляється**. Керується змінною `CRYPTO_KEYFILE_POLICY`:
 
 | Значення | Політика |
 |---|---|
@@ -76,7 +76,7 @@ Kubernetes `fsGroup`): `0600`, `0400`, `0640`, `0440`. За замовчуван
 ### Формат keyring-рядка
 
 ```
-WBTL_CRYPTO_CIPHER_KEYRING=entry1,entry2,...
+CRYPTO_CIPHER_KEYRING=entry1,entry2,...
 ```
 
 Кожен запис — ключ або tombstone. Формат запису:
@@ -117,41 +117,41 @@ WBTL_CRYPTO_CIPHER_KEYRING=entry1,entry2,...
 
 ```bash
 # Один phrase, KID=1 (implicit)
-WBTL_CRYPTO_CIPHER_KEYRING=correct-horse-battery-staple!
+CRYPTO_CIPHER_KEYRING=correct-horse-battery-staple!
 
 # Два ключі: KID=1 (читання), KID=2 (primary)
-WBTL_CRYPTO_CIPHER_KEYRING=old-phrase-2024!,new-phrase-2025!
+CRYPTO_CIPHER_KEYRING=old-phrase-2024!,new-phrase-2025!
 
 # Явний KID=42, файловий ключ KID=31, tombstone KID=3 (implicit, позиція 3)
-WBTL_CRYPTO_CIPHER_KEYRING=[42]my-phrase!,[31]/run/secrets/key.pem,-
+CRYPTO_CIPHER_KEYRING=[42]my-phrase!,[31]/run/secrets/key.pem,-
 
 # Phrase з комою (потрібен escape)
-WBTL_CRYPTO_CIPHER_KEYRING=correct-horse\,battery-staple-2025!
+CRYPTO_CIPHER_KEYRING=correct-horse\,battery-staple-2025!
 ```
 
 #### Роздільники: inline vs файл
 
 Той самий формат читається двома способами:
 
-- **inline** (`WBTL_CRYPTO_CIPHER_KEYRING`) — записи через **кому**, одним рядком;
-- **файл** (`WBTL_CRYPTO_CIPHER_KEYFILE`) — через кому, **новий рядок** (по ключу на рядок)
+- **inline** (`CRYPTO_CIPHER_KEYRING`) — записи через **кому**, одним рядком;
+- **файл** (`CRYPTO_CIPHER_KEYFILE`) — через кому, **новий рядок** (по ключу на рядок)
   або мішано. Зовнішні пробіли обрізаються; порожні рядки й кінцевий перенос ігноруються
   (implicit-KID рахує лише непорожні записи).
 
 ```bash
 # inline: через кому
-WBTL_CRYPTO_CIPHER_KEYRING=old-phrase-2024!,new-phrase-2025!
+CRYPTO_CIPHER_KEYRING=old-phrase-2024!,new-phrase-2025!
 ```
 
 ```
 # файл: той самий keyring, по ключу на рядок
-# /run/secrets/keyring.conf   ← WBTL_CRYPTO_CIPHER_KEYFILE
+# /run/secrets/keyring.conf   ← CRYPTO_CIPHER_KEYFILE
 old-phrase-2024!
 new-phrase-2025!
 ```
 
 (Порядок = KID: перший рядок — KID=1, останній не-tombstone — primary. Так само для
-`WBTL_CRYPTO_SEARCH_KEYRING` / `WBTL_CRYPTO_SEARCH_KEYFILE`.)
+`CRYPTO_SEARCH_KEYRING` / `CRYPTO_SEARCH_KEYFILE`.)
 
 #### Вимоги до phrase
 
@@ -182,14 +182,14 @@ new-phrase-2025!
 
 ### Крок 1 — Додати новий ключ і зробити його primary
 
-Оновіть `WBTL_CRYPTO_CIPHER_KEYRING` — додайте новий phrase. Новий ключ автоматично стає primary за позицією:
+Оновіть `CRYPTO_CIPHER_KEYRING` — додайте новий phrase. Новий ключ автоматично стає primary за позицією:
 
 ```bash
 # Було:
-WBTL_CRYPTO_CIPHER_KEYRING=phrase-jan-2025!
+CRYPTO_CIPHER_KEYRING=phrase-jan-2025!
 
 # Стало (KID=1 читання, KID=2 primary):
-WBTL_CRYPTO_CIPHER_KEYRING=phrase-jan-2025!,phrase-jul-2025!
+CRYPTO_CIPHER_KEYRING=phrase-jan-2025!,phrase-jul-2025!
 ```
 
 Або програмно, атомарно через `Rotate`:
@@ -222,7 +222,7 @@ err := ring.Retire(1) // помилка, якщо спробувати відк�
 Або через конфіг — замінити старий phrase на tombstone `-`:
 
 ```bash
-WBTL_CRYPTO_CIPHER_KEYRING=-,phrase-jul-2025!
+CRYPTO_CIPHER_KEYRING=-,phrase-jul-2025!
 #                          ^ KID=1 відкликано
 ```
 
@@ -265,7 +265,7 @@ plain, err := box.Decrypt(ctx, blob)
 ### Package-level Encrypt / Decrypt (через Default)
 
 ```go
-// Читає WBTL_CRYPTO_CIPHER_KEYRING або WBTL_CRYPTO_CIPHER_KEYFILE; ініціалізується один раз.
+// Читає CRYPTO_CIPHER_KEYRING або CRYPTO_CIPHER_KEYFILE; ініціалізується один раз.
 blob, err := cryptobox.Encrypt(ctx, plaintext)
 plain, err := cryptobox.Decrypt(ctx, blob)
 ```
@@ -309,7 +309,7 @@ go func() {
 `Watch` читає файл одразу при запуску, потім поллить через `KeyFile.Poll` (default 5s).  
 При невдалому перезавантаженні попередній стан зберігається і спроба повторюється на наступному тіку.
 
-**Формат файлу** — той самий, що і в `WBTL_CRYPTO_CIPHER_KEYRING`, але у файлі записи можна
+**Формат файлу** — той самий, що і в `CRYPTO_CIPHER_KEYRING`, але у файлі записи можна
 розділяти **новим рядком** (по ключу на рядок), комою, або мішано; порожні рядки й
 кінцевий перенос ігноруються:
 
@@ -387,12 +387,12 @@ Package-level `Encrypt`/`Decrypt`/`Recrypt` ідуть через `Default()`.
 файлу мутує ring і скидає AEAD-кеш `Box`, тож нові шифрування йдуть під новим primary, а старі
 `kid` далі дешифруються.
 
-**Варіант 1 — через env (нуль коду).** Задай `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` — `DefaultKeys`
+**Варіант 1 — через env (нуль коду).** Задай `CRYPTO_CIPHER_KEYFILE_POLL` — `DefaultKeys`
 сам стартує фоновий watcher на весь час життя процесу:
 
 ```bash
-export WBTL_CRYPTO_CIPHER_KEYFILE=/run/secrets/keyring.conf
-export WBTL_CRYPTO_CIPHER_KEYFILE_POLL=5s   # 0/не задано — вимкнено
+export CRYPTO_CIPHER_KEYFILE=/run/secrets/keyring.conf
+export CRYPTO_CIPHER_KEYFILE_POLL=5s   # 0/не задано — вимкнено
 ```
 
 - Значення підтягується до мінімуму `MinKeyFilePoll` (1s), щоб не «довбати» ФС.
@@ -408,7 +408,7 @@ export WBTL_CRYPTO_CIPHER_KEYFILE_POLL=5s   # 0/не задано — вимкн
 ```go
 ring, _ := cryptobox.DefaultKeys()
 go func() {
-    for err := range ring.WatchFile(ctx) { // читає WBTL_CRYPTO_CIPHER_KEYFILE / <SystemDir>/.cipher
+    for err := range ring.WatchFile(ctx) { // читає CRYPTO_CIPHER_KEYFILE / <SystemDir>/.cipher
         log.Printf("cipher keyring reload: %v", err)
     }
 }()
@@ -417,7 +417,7 @@ go func() {
 > ⚠️ Ротація = **додати** ключ з більшим KID у файл (старі лишати для дешифрування). Видаляти
 > ключ, під яким ще є дані, не можна — вони стануть недешифровними.
 
-> Другий незалежний keyring (напр. blind-index `WBTL_CRYPTO_SEARCH_KEYRING` у cryptostore)
+> Другий незалежний keyring (напр. blind-index `CRYPTO_SEARCH_KEYRING` у cryptostore)
 > будується окремим `NewKeyring(...)` — cryptobox `Default` знає лише про cipher-namespace.
 > Авто-hot-reload search-ключа поки не підключено (немає підтримки живої ротації blind-index).
 
@@ -439,7 +439,7 @@ services:
   app:
     image: webitel/app
     environment:
-      WBTL_CRYPTO_CIPHER_KEYRING: "my-strong-dev-phrase-2024!"
+      CRYPTO_CIPHER_KEYRING: "my-strong-dev-phrase-2024!"
 ```
 
 ### Kubernetes Secret (inline)
@@ -451,7 +451,7 @@ metadata:
   name: webitel-cryptobox
 type: Opaque
 stringData:
-  WBTL_CRYPTO_CIPHER_KEYRING: "phrase-v1!,phrase-v2!"
+  CRYPTO_CIPHER_KEYRING: "phrase-v1!,phrase-v2!"
 ```
 
 ```yaml
@@ -483,9 +483,9 @@ spec:
   containers:
     - name: app
       env:
-        - name: WBTL_CRYPTO_CIPHER_KEYFILE
+        - name: CRYPTO_CIPHER_KEYFILE
           value: /run/secrets/cryptobox/keyring.conf
-        - name: WBTL_CRYPTO_CIPHER_KEYFILE_POLL   # авто hot-reload при оновленні Secret
+        - name: CRYPTO_CIPHER_KEYFILE_POLL   # авто hot-reload при оновленні Secret
           value: "5s"
       volumeMounts:
         - name: cryptobox-secret
@@ -498,12 +498,12 @@ spec:
 ```
 
 ```go
-// Нуль коду: з WBTL_CRYPTO_CIPHER_KEYFILE_POLL=5s (вище) Default сам поллить keyfile.
+// Нуль коду: з CRYPTO_CIPHER_KEYFILE_POLL=5s (вище) Default сам поллить keyfile.
 blob, err := cryptobox.Encrypt(context.Background(), []byte("secret"))
 // При оновленні Secret файл зміниться → watcher викличе ring.Load() → Box cache скинеться → новий AEAD
 ```
 
-> Без `WBTL_CRYPTO_CIPHER_KEYFILE_POLL` watch сам не вмикається — тоді стартуй його явно
+> Без `CRYPTO_CIPHER_KEYFILE_POLL` watch сам не вмикається — тоді стартуй його явно
 > через `ring.WatchFile(ctx)` (див. секцію «Default / DefaultKeys»).
 
 > Vault Agent і AWS Secrets Manager Agent теж пишуть секрети у файли — схема та сама.
@@ -515,7 +515,7 @@ spec:
   containers:
     - name: app
       env:
-        - name: WBTL_CRYPTO_CIPHER_KEYRING
+        - name: CRYPTO_CIPHER_KEYRING
           value: "/run/secrets/cryptobox/key.bin"
       volumeMounts:
         - name: cryptobox-secret

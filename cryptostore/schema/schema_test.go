@@ -14,8 +14,8 @@ import (
 // EnvOverlayFile (a path) takes precedence over EnvOverlay (inline JSON/JSONC),
 // mirroring the *_FILE precedence of the cipher and search keyrings.
 const (
-	EnvOverlay     = "WBTL_CRYPTO_SCHEMA"
-	EnvOverlayFile = "WBTL_CRYPTO_SCHEMA_FILE"
+	EnvOverlay     = "CRYPTO_SCHEMA"
+	EnvOverlayFile = "CRYPTO_SCHEMA_FILE"
 )
 
 func TestMustParseConfig(t *testing.T) {
@@ -161,10 +161,10 @@ func TestDefaultConfigFileWins(t *testing.T) {
 }
 
 func TestDefaultConfigIncludeFiles(t *testing.T) {
-	// WBTL_CRYPTO_SCHEMA as an include directive: a selective list of files (not a
+	// CRYPTO_SCHEMA as an include directive: a selective list of files (not a
 	// whole-dir merge). Relative files anchor to SystemDir/schema.d.
 	sysdir := t.TempDir()
-	t.Setenv("WBTL_CRYPTO_DIR", sysdir)
+	t.Setenv("CRYPTO_DIR", sysdir)
 	schemaDir := filepath.Join(sysdir, "schema.d")
 	if err := os.MkdirAll(schemaDir, 0o755); err != nil {
 		t.Fatal(err)

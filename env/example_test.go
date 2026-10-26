@@ -7,14 +7,14 @@ import (
 	"github.com/webitel/crypto/env"
 )
 
-// Example reads WBTL_APP_* configuration through a nested namespace: the code names only
-// the leaf keys (NAME, DEBUG) while the WBTL_APP_ prefix is carried by the reader.
+// Example reads APP_* configuration through a nested namespace: the code names only
+// the leaf keys (NAME, DEBUG) while the APP_ prefix is carried by the reader.
 func Example() {
 
-	os.Setenv("WBTL_APP_NAME", "webitel")
-	os.Setenv("WBTL_APP_DEBUG", "true")
+	os.Setenv("APP_NAME", "webitel")
+	os.Setenv("APP_DEBUG", "true")
 
-	app := env.Environment("APP") // reads WBTL_APP_*
+	app := env.Environment("APP") // reads APP_*
 
 	var name string
 	var debug bool

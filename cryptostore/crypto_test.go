@@ -28,12 +28,12 @@ func TestDefaultMemoized(t *testing.T) {
 }
 
 func TestSystemDir(t *testing.T) {
-	t.Setenv("WBTL_CRYPTO_DIR", "") // force default
-	if got := cryptostore.SystemDir(); got != "/var/lib/webitel/crypto" {
+	t.Setenv("CRYPTO_DIR", "") // force default
+	if got := cryptostore.SystemDir(); got != "/var/lib/cryptoctl" {
 		t.Fatalf("default SystemDir = %q", got)
 	}
-	t.Setenv("WBTL_CRYPTO_DIR", "/etc/webitel/crypto")
-	if got := cryptostore.SystemDir(); got != "/etc/webitel/crypto" {
+	t.Setenv("CRYPTO_DIR", "/etc/cryptoctl")
+	if got := cryptostore.SystemDir(); got != "/etc/cryptoctl" {
 		t.Fatalf("override SystemDir = %q", got)
 	}
 }

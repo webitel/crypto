@@ -5,8 +5,8 @@
 // stream-encrypt/decrypt a file, generate a key, and derive a blind-index search token.
 //
 // It has no key configuration of its own: the value codec comes from cryptostore.Default
-// — the same environment-resolved keyring the services use (WBTL_CRYPTO_CIPHER_{KEYRING,KEYFILE}
-// or <SystemDir>/.cipher for encryption; WBTL_CRYPTO_SEARCH_{KEYRING,KEYFILE} or .search for the
+// — the same environment-resolved keyring the services use (CRYPTO_CIPHER_{KEYRING,KEYFILE}
+// or <SystemDir>/.cipher for encryption; CRYPTO_SEARCH_{KEYRING,KEYFILE} or .search for the
 // blind index) — so cryptoctl reads and rewrites data with exactly those keys. Its whole
 // configuration is the set of stores to manage: one JSON/JSONC file per store in a
 // store-dir, each opened via cryptostore.OpenStore behind a single Migration. Store kinds
@@ -72,8 +72,8 @@ func envOr(key, def string) string {
 
 func main() {
 	top := flag.NewFlagSet("cryptoctl", flag.ExitOnError)
-	storeDir := top.String("store-dir", envOr("WBTL_CRYPTO_STORE_DIR", "store.d"), "directory of per-store config files (JSON/JSONC), one per store")
-	schemaDir := top.String("schema-dir", envOr("WBTL_CRYPTO_SCHEMA_DIR", "schema.d"), "shared directory of field-schema files for record stores")
+	storeDir := top.String("store-dir", envOr("CRYPTO_STORE_DIR", "store.d"), "directory of per-store config files (JSON/JSONC), one per store")
+	schemaDir := top.String("schema-dir", envOr("CRYPTO_SCHEMA_DIR", "schema.d"), "shared directory of field-schema files for record stores")
 	var only stringList
 	top.Var(&only, "store", "select a specific store file in --store-dir (repeatable); default: all files")
 	verbose := top.Bool("verbose", false, "enable store-level debug logging (e.g. SQL query tracing for postgres)")
@@ -82,7 +82,7 @@ func main() {
 	_ = top.Parse(os.Args[1:])
 
 	// By default cryptobox rejects key files that are not private (owner/group-read only).
-	// --unsafe-keys relaxes that to a warning — same as WBTL_CRYPTO_KEYFILE_POLICY=unsafe.
+	// --unsafe-keys relaxes that to a warning — same as CRYPTO_KEYFILE_POLICY=unsafe.
 	// Set before any keyring is read (openCodec / loadStores).
 	if *unsafeKeys {
 		cryptobox.KeyFilePolicy = cryptobox.KeyFileWarnUnlessPrivate
@@ -155,7 +155,7 @@ func main() {
 		fatal(err)
 	}
 	if len(stores) == 0 {
-		fatal(fmt.Errorf("no stores configured (store-dir %q, --store %v); set --store-dir / WBTL_CRYPTO_STORE_DIR or --store", *storeDir, []string(only)))
+		fatal(fmt.Errorf("no stores configured (store-dir %q, --store %v); set --store-dir / CRYPTO_STORE_DIR or --store", *storeDir, []string(only)))
 	}
 	opened, mig, err := openStores(ctx, stores, *verbose)
 	if err != nil {

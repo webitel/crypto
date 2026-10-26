@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"text/tabwriter"
+
+	"github.com/webitel/crypto/cryptostore"
 )
 
 // cmdHelp implements `cryptoctl help [command|topic]`: general usage with no argument,
@@ -219,18 +221,18 @@ var topics = []topic{
 		long: "cryptoctl uses two cryptobox keyrings, read ONLY from the environment (never\n" +
 			"flags), so the tool and the services share exactly the same keys:\n" +
 			"\n" +
-			"  cipher (value encryption)   WBTL_CRYPTO_CIPHER_KEYRING | _KEYFILE\n" +
-			"  search (blind index)        WBTL_CRYPTO_SEARCH_KEYRING | _KEYFILE\n" +
+			"  cipher (value encryption)   CRYPTO_CIPHER_KEYRING | _KEYFILE\n" +
+			"  search (blind index)        CRYPTO_SEARCH_KEYRING | _KEYFILE\n" +
 			"\n" +
 			"Resolution order, per keyring: _KEYRING (inline keys) or _KEYFILE (a path) from\n" +
 			"the environment first; if neither is set, the well-known system file under\n" +
-			"<SystemDir> — .cipher / .search — where SystemDir is WBTL_CRYPTO_DIR (default\n" +
-			"/var/lib/webitel/crypto). The search keyring is optional: absent everywhere,\n" +
-			"search is simply disabled.\n" +
+			"<SystemDir> — .cipher / .search — where SystemDir is CRYPTO_DIR, else the\n" +
+			"build default (here: " + cryptostore.SystemDir() + "). The search keyring is\n" +
+			"optional: absent everywhere, search is simply disabled.\n" +
 			"\n" +
 			"Key files must be private — owner (and tolerated group) read only: 0600, 0400,\n" +
 			"0640, 0440; a wider mode is rejected. Relax to a warning with --unsafe-keys or\n" +
-			"WBTL_CRYPTO_KEYFILE_POLICY=unsafe.\n" +
+			"CRYPTO_KEYFILE_POLICY=unsafe.\n" +
 			"\n" +
 			"Keys are never discovered from $PWD or next to the binary — only the environment\n" +
 			"or the system dir, so secrets come from a trusted location. Generate or rotate a\n" +

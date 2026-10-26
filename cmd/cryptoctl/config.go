@@ -133,7 +133,7 @@ func resolveStoreFile(storeDir, name string) (string, error) {
 		return name, nil
 	}
 	if storeDir == "" {
-		return "", fmt.Errorf("store %q: no store dir (set --store-dir / WBTL_CRYPTO_STORE_DIR)", name)
+		return "", fmt.Errorf("store %q: no store dir (set --store-dir / CRYPTO_STORE_DIR)", name)
 	}
 	cands := []string{name}
 	if !storeFileExts[strings.ToLower(filepath.Ext(name))] {

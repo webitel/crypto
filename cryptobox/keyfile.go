@@ -134,14 +134,14 @@ func (fd *KeyFile) Watch(ctx context.Context, keys *Keyring) <-chan error {
 
 // KeyFilePolicy decides whether a key file's permissions are acceptable before cryptobox
 // reads it. It runs for every key file loaded from disk — the keyring file behind
-// WBTL_CRYPTO_CIPHER_KEYFILE / WBTL_CRYPTO_SEARCH_KEYFILE (and the well-known
+// CRYPTO_CIPHER_KEYFILE / CRYPTO_SEARCH_KEYFILE (and the well-known
 // <SystemDir>/.cipher and .search), plus each /path key referenced inside a keyring.
 //
 // A non-nil return rejects the file: the load fails with that error. nil accepts it. The
 // default is KeyFileRequirePrivate (strict), overridable from the environment:
 //
-//	WBTL_CRYPTO_KEYFILE_POLICY=strict → KeyFileRequirePrivate   (default; also the empty value)
-//	WBTL_CRYPTO_KEYFILE_POLICY=unsafe → KeyFileWarnUnlessPrivate (log a warning, load anyway)
+//	CRYPTO_KEYFILE_POLICY=strict → KeyFileRequirePrivate   (default; also the empty value)
+//	CRYPTO_KEYFILE_POLICY=unsafe → KeyFileWarnUnlessPrivate (log a warning, load anyway)
 //
 // "off" is deliberately NOT reachable from the environment — turning the check off
 // entirely is a code decision: cryptobox.KeyFilePolicy = nil. Assign the var to either
@@ -150,7 +150,7 @@ func (fd *KeyFile) Watch(ctx context.Context, keys *Keyring) <-chan error {
 // keys reach here — inline keyrings and environment values are not checked.
 var KeyFilePolicy = keyFilePolicyFromEnv()
 
-// keyFilePolicyFromEnv resolves the default policy from WBTL_CRYPTO_KEYFILE_POLICY.
+// keyFilePolicyFromEnv resolves the default policy from CRYPTO_KEYFILE_POLICY.
 // Only "unsafe" relaxes the check; everything else — the empty value and any typo alike —
 // fails safe to strict, so a misspelled value can never silently weaken security.
 func keyFilePolicyFromEnv() func(path string, info os.FileInfo) error {
@@ -182,7 +182,7 @@ func keyFilePrivacyViolation(mode fs.FileMode) string {
 }
 
 // KeyFileWarnUnlessPrivate logs a warning via slog (the default logger) when a key file is
-// not private, but loads it anyway. Select it with WBTL_CRYPTO_KEYFILE_POLICY=unsafe.
+// not private, but loads it anyway. Select it with CRYPTO_KEYFILE_POLICY=unsafe.
 func KeyFileWarnUnlessPrivate(path string, info os.FileInfo) error {
 	if reason := keyFilePrivacyViolation(info.Mode()); reason != "" {
 		slog.Warn("cryptobox: key file is not private",
