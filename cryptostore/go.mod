@@ -3,9 +3,9 @@ module github.com/webitel/crypto/cryptostore
 go 1.25.0
 
 require (
-	github.com/webitel/crypto/cryptobox v0.2.0
+	github.com/webitel/crypto/cryptobox v0.3.0
 	github.com/webitel/crypto/encoding/jsonc v0.1.0
-	github.com/webitel/crypto/env v0.1.0
+	github.com/webitel/crypto/env v0.2.0
 )
 
 require (
