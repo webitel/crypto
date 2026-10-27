@@ -402,3 +402,65 @@ func TestStoreFirstEncryption(t *testing.T) {
 		t.Fatalf("second migrate recrypted = %d, want 0 (idempotent)", res2.Recrypted)
 	}
 }
+
+// TestStoreSkipsMissingTable: a schema unit whose table does not exist in this database
+// (the service owning it is not installed) is skipped, not an error: there is no data
+// under any key there.
+func TestStoreSkipsMissingTable(t *testing.T) {
+	dsn := os.Getenv("CRYPTOSTORE_PG_DSN")
+	if dsn == "" {
+		t.Skip("set CRYPTOSTORE_PG_DSN to run the Postgres integration test")
+	}
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	if err := postgres.InstallFunctions(ctx, pool, "public"); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+
+	const ddl = `
+		CREATE SCHEMA IF NOT EXISTS cryptostore_test;
+		DROP TABLE IF EXISTS cryptostore_test.present;
+		DROP TABLE IF EXISTS cryptostore_test.absent;
+		CREATE TABLE cryptostore_test.present (id bigint PRIMARY KEY, secret bytea);
+		INSERT INTO cryptostore_test.present (id, secret) VALUES (1, 'plain');`
+	if _, err := pool.Exec(ctx, ddl); err != nil {
+		t.Fatalf("ddl: %v", err)
+	}
+	t.Cleanup(func() { _, _ = pool.Exec(ctx, `DROP TABLE IF EXISTS cryptostore_test.present`) })
+
+	sch, err := schema.ParseConfig([]byte(`{
+		"version": 1,
+		"units": {
+			"cryptostore_test.absent":  {"fields": {"secret": {}}},
+			"cryptostore_test.present": {"fields": {"secret": {}}}
+		}
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	cd := schemaCodec(t, inlineCodec(t, "correct-horse-battery-staple-001!"), sch)
+	store := postgres.New("pg:missing", pool, cd, "public")
+
+	if _, err := store.Usage(ctx); err != nil {
+		t.Fatalf("usage with a missing table: %v", err)
+	}
+	res, err := store.Migrate(ctx, cryptostore.MigrateOptions{})
+	if err != nil {
+		t.Fatalf("migrate with a missing table: %v", err)
+	}
+	if res.Recrypted != 1 {
+		t.Fatalf("recrypted = %d, want 1 (the present table)", res.Recrypted)
+	}
+	usage, err := store.Usage(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(usage) != 1 || usage[0].Count != 1 {
+		t.Fatalf("usage = %+v, want one key with 1 value", usage)
+	}
+}

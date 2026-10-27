@@ -22,12 +22,14 @@ type DB interface {
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
-// isColumnUndefined reports whether err is Postgres' undefined_column (42703).
-// A managed field whose column does not exist yet is skipped by Usage/Migrate
-// rather than failing the whole operation.
-func isColumnUndefined(err error) bool {
+// isNotDeployed reports whether err is Postgres' undefined_table (42P01) or
+// undefined_column (42703). A schema unit whose table — or a managed field whose
+// column — does not exist in this database (the owning service is not installed or
+// not migrated yet) holds no data, so Usage/Migrate skip it rather than failing the
+// whole operation.
+func isNotDeployed(err error) bool {
 	var pg *pgconn.PgError
-	return errors.As(err, &pg) && pg.Code == "42703"
+	return errors.As(err, &pg) && (pg.Code == "42P01" || pg.Code == "42703")
 }
 
 // SQL identifier. Names come from a trusted operator schema, never

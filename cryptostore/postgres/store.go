@@ -89,7 +89,7 @@ func (c *Store) fields() []encField {
 // each row into a set of kids (scalar → cryptostore_kid, 0 or 1 kid, NULL legacy
 // plaintext excluded; json → cryptostore_kids, one per encrypted attribute), which
 // the outer query groups and counts. Counts only (ciphertext volume is not
-// reported). A managed column not yet deployed skips the whole table, as in Migrate.
+// reported). A table or managed column not deployed skips the whole table, as in Migrate.
 func (c *Store) Usage(ctx context.Context) ([]cryptostore.KeyUsage, error) {
 	agg := map[cryptobox.KID]int64{}
 	units := c.units()
@@ -133,8 +133,8 @@ func (c *Store) usageUnit(ctx context.Context, unit string, fields []encField, a
 	)
 	rows, err := c.db.Query(ctx, q)
 	if err != nil {
-		if isColumnUndefined(err) {
-			return nil // a managed column isn't deployed yet — skip the table
+		if isNotDeployed(err) {
+			return nil // the table or a managed column isn't deployed — skip the table
 		}
 		return fmt.Errorf("postgres: usage %s: %w", unit, err)
 	}
@@ -275,7 +275,7 @@ func (c *Store) countUnit(ctx context.Context, unit string, fields []encField, p
 	q := fmt.Sprintf(`SELECT count(*)::bigint FROM %s r WHERE %s`, tableName(unit), c.predicate("r", fields))
 	rows, err := c.db.Query(ctx, q, primary)
 	if err != nil {
-		if isColumnUndefined(err) {
+		if isNotDeployed(err) {
 			return 0, nil
 		}
 		return 0, err
@@ -304,8 +304,8 @@ func (c *Store) migrateUnit(ctx context.Context, unit string, fields []encField,
 	for {
 		rows, err := c.db.Query(ctx, sel, primary)
 		if err != nil {
-			if isColumnUndefined(err) {
-				return res, nil // column not deployed yet — nothing to do
+			if isNotDeployed(err) {
+				return res, nil // table or column not deployed — nothing to do
 			}
 			return res, fmt.Errorf("postgres: scan %s: %w", unit, err)
 		}
