@@ -41,7 +41,7 @@ All encryption/decryption happens **in code** — keyring material never reaches
 | `cryptostore/schema` | field-oriented codec: a declarative `Config` (unit→field policy) + `Codec` that encrypts named fields in records and fills the search-index column. **Package of the core module.** |
 | `cryptostore/postgres` | `Store` over pgx: `Usage`/`Migrate` via the `cryptostore_*` SQL helper functions; registers DSN scheme `postgres`; registry-opened stores with the same DSN share one refcounted pool (`pool.go`) |
 | `cryptostore/blobstore` (+ `/gocloud`) | object storage: envelope-DEK + streaming (`WBS`) file crypto; local dir (scheme `blobfs`) + gocloud (schemes `s3`/`gs`/`file`/`mem`) |
-| `cmd/cryptoctl` | the `cryptoctl` CLI binary (operates stores from a config) |
+| `cmd/cryptoctl` | the `cryptoctl` CLI binary (operates stores from a config); the code is package `cmd/cryptoctl/cli` (`cli.Main`), `main.go` only calls it |
 
 ### Core files (`cryptostore`)
 

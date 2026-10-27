@@ -23,7 +23,7 @@ independently; heavier backends live in their own modules so the core stays ligh
 | ↳ postgres | `github.com/webitel/crypto/cryptostore/postgres` | A `Store` over pgx: per-key usage + batched rotation via `cryptostore_*` SQL functions. |
 | ↳ blobstore | `github.com/webitel/crypto/cryptostore/blobstore` | Object store: envelope-DEK + streaming (WBS) file crypto; local directory backend. |
 | ↳ blobstore/gocloud | `github.com/webitel/crypto/cryptostore/blobstore/gocloud` | Cloud backends (S3 / GCS / …) via `gocloud.dev`, kept optional. |
-| **cmd/cryptoctl** | `github.com/webitel/crypto/cmd/cryptoctl` | CLI: key generation, encrypt/decrypt, per-store status/usage/migrate. |
+| **cmd/cryptoctl** | `github.com/webitel/crypto/cmd/cryptoctl` | CLI: key generation, encrypt/decrypt, per-store status/usage/migrate. Importable as `cmd/cryptoctl/cli` (`cli.Main`) to build a distribution with a compiled-in schema baseline. |
 
 ## Install
 

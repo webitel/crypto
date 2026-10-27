@@ -141,6 +141,22 @@ loader вантажить названі файли й зливає їх чер�
 overlay може лише додавати/вмикати `search`, але не послаблює baseline. Драйвер postgres
 лишається без baseline — сторонні postgres-сховища підключаються без нав'язаної схеми.
 
+Така збірка — це власний `main` поверх пакета `cli`:
+
+```go
+package main
+
+import (
+	"github.com/webitel/crypto/cmd/cryptoctl/cli"
+	"github.com/webitel/crypto/cryptostore/schema"
+)
+
+func main() {
+	schema.Register(myBaseline) // *schema.Config
+	cli.Main()
+}
+```
+
 ## Команди
 
 ```bash
