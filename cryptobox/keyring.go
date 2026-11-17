@@ -112,6 +112,13 @@ func (kr *Keyring) Load(raw string) error {
 	return nil
 }
 
+// Version returns a counter that changes every time the keyring state is
+// replaced by Load. Callers can cache values derived from key material and
+// drop them when Version changes.
+func (kr *Keyring) Version() uint64 {
+	return kr.version.Load()
+}
+
 // KeyringOptions describes how to build a Keyring — from an inline spec or a file.
 // It carries no cipher/Box concern (the algorithm is a Box property, not a keyring
 // one) and no watch state: NewKeyring loads once and returns a plain *Keyring. For

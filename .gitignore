@@ -1,4 +1,5 @@
 _*
 .claude
+.idea
 go.work.sum
 cmd/cryptoctl/cryptoctl
